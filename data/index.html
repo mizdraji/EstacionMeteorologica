@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estación Meteorológica</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <h1>Estación Meteorológica Local</h1>
+    <p id="status-line">Conectando...</p>
+  </header>
+
+  <main class="grid">
+    <section class="card">
+      <h2>Temperatura principal</h2>
+      <p class="value" id="temp-main">N/A</p>
+    </section>
+    <section class="card">
+      <h2>Temperatura BMP180</h2>
+      <p class="value" id="temp-bmp">N/A</p>
+    </section>
+    <section class="card">
+      <h2>Temperatura DHT11</h2>
+      <p class="value" id="temp-dht">N/A</p>
+    </section>
+    <section class="card">
+      <h2>Humedad</h2>
+      <p class="value" id="humidity">N/A</p>
+    </section>
+    <section class="card">
+      <h2>Presión</h2>
+      <p class="value" id="pressure">N/A</p>
+    </section>
+    <section class="card">
+      <h2>Altitud estimada</h2>
+      <p class="value" id="altitude">N/A</p>
+      <p class="note">Estimada según presión de referencia configurada en el firmware.</p>
+    </section>
+    <section class="card">
+      <h2>Sensores</h2>
+      <p id="sensor-bmp">BMP180: N/A</p>
+      <p id="sensor-dht">DHT11: N/A</p>
+    </section>
+    <section class="card">
+      <h2>Sistema</h2>
+      <p id="wifi">Wi-Fi: N/A</p>
+      <p id="rssi">RSSI: N/A</p>
+      <p id="ip">IP: N/A</p>
+      <p id="hostname">Host: N/A</p>
+      <p id="uptime">Uptime: N/A</p>
+      <p id="firmware">Firmware: N/A</p>
+      <p id="heap">Memoria libre: N/A</p>
+    </section>
+  </main>
+
+  <script src="/script.js"></script>
+</body>
+</html>
