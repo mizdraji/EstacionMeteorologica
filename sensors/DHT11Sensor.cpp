@@ -103,6 +103,5 @@ void DHT11Sensor::read(WeatherData& data) {
   data.temperatureDHT = (float)temperature;
   data.humidity = (float)humidity;
   data.dht11OK = true;
-  data.lastDHTReading = millis();
   data.updateDerivedValues();
 }

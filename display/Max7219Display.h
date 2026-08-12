@@ -15,7 +15,6 @@ private:
   uint8_t _din;
   uint8_t _clk;
   uint8_t _cs;
-  bool _ready;
 
   void send(uint8_t address, uint8_t data);
   void setDigitRaw(uint8_t digit, uint8_t value);

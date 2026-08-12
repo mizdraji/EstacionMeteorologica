@@ -41,6 +41,5 @@ void BMP180Sensor::read(WeatherData& data) {
   data.pressure = pressureHpa;
   data.altitude = altitude;
   data.bmp180OK = true;
-  data.lastBMPReading = millis();
   data.updateDerivedValues();
 }
