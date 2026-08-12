@@ -1,0 +1,10 @@
+# Credenciales locales (no versionar)
+secrets.h
+
+# Artefactos de build / IDE
+build/
+*.hex
+*.elf
+*.bin
+.vscode/
+.idea/

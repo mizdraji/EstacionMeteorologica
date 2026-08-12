@@ -6,14 +6,13 @@
 
 #define FIRMWARE_VERSION "1.1.0"
 
-// --- Wi-Fi ---
-#define WIFI_SSID       "Algonose"
-#define WIFI_PASSWORD   "g36025425m"
+// Credenciales en secrets.h (no versionado). Ver secrets.h.example.
+#include "secrets.h"
+
 #define HOSTNAME        "weather-station-01"
 
 // --- OTA ---
 #define OTA_HOSTNAME    "weather-station-01"
-#define OTA_PASSWORD    "cambiar_ota_password"
 
 // --- I2C BMP180 (tutorial WeatherInstrument: D2/D1) ---
 #define BMP180_SDA_PIN  4   // D2
