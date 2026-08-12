@@ -27,7 +27,7 @@ Firmware modular para medición local con BMP180, DHT11, MAX7219 (hora NTP) y OL
 | MAX7219 CLK | D4 | 2 |
 | MAX7219 CS | D0 | 16 |
 
-El MAX7219 muestra solo la hora local (`HH-MM-SS`) sincronizada por NTP (`3.south-america.pool.ntp.org`, UTC-3). Hasta sincronizar muestra guiones.
+El MAX7219 muestra solo la hora local (`HH-MM-SS`) sincronizada por NTP (`3.south-america.pool.ntp.org`, UTC-3). Hasta sincronizar muestra guiones. La misma hora se muestra en la web.
 
 ## Compilar
 
@@ -40,13 +40,19 @@ Arduino IDE 1.8 solo compila `.cpp` en la raiz del sketch. Por eso existe `AllMo
 
 ## LittleFS
 
-Subir carpeta `data/` con plugin LittleFS Data Upload.
+Subir carpeta `data/` con plugin LittleFS Data Upload (incluye la UI con reloj y gráficos).
 
 ## Acceso
 
 - `http://<IP>/`
 - `http://weather-station-01.local`
-- API: `/api/data`, `/api/status`
+- API: `/api/data`, `/api/status`, `/api/history`
+
+### Historial / gráficos
+
+- Ring buffer en RAM: `HISTORY_CAPACITY` muestras cada `HISTORY_INTERVAL_MS` (por defecto ~30 min).
+- La web dibuja temperatura, humedad y presión en canvas (sin CDN).
+- Se pierde al reiniciar el ESP.
 
 ## OTA
 

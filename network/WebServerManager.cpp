@@ -1,6 +1,8 @@
 #include "WebServerManager.h"
 #include "../Config.h"
 #include "../core/WeatherData.h"
+#include "../core/HistoryBuffer.h"
+#include "NtpTime.h"
 #include <ESP8266WebServer.h>
 #include <LittleFS.h>
 
@@ -32,6 +34,9 @@ static void handleApiData() {
 
 static void handleApiStatus() {
   const WeatherData& data = WeatherData::instance();
+  char timeBuf[9];
+  NtpTime::formatTime(timeBuf, sizeof(timeBuf));
+
   String json = "{";
   json += "\"wifi_connected\":" + String(data.wifiConnected ? "true" : "false") + ",";
   json += "\"rssi\":" + String(data.wifiRSSI) + ",";
@@ -44,9 +49,44 @@ static void handleApiStatus() {
   json += "\"dht11_ok\":" + String(data.dht11OK ? "true" : "false") + ",";
   json += "\"max7219_ok\":" + String(data.max7219OK ? "true" : "false") + ",";
   json += "\"ntp_synced\":" + String(data.ntpSynced ? "true" : "false") + ",";
+  json += "\"time\":\"" + String(timeBuf) + "\",";
+  json += "\"epoch\":" + String(NtpTime::isSynced() ? NtpTime::epoch() : 0) + ",";
   json += "\"ota_in_progress\":" + String(data.otaInProgress ? "true" : "false");
   json += "}";
 
+  server.send(200, "application/json", json);
+}
+
+static void handleApiHistory() {
+  // Respuesta compacta para no saturar el heap del ESP8266.
+  String json;
+  json.reserve(48 + HistoryBuffer::count() * 48);
+  json += "{\"interval_s\":";
+  json += String(HistoryBuffer::intervalSec());
+  json += ",\"capacity\":";
+  json += String(HistoryBuffer::capacity());
+  json += ",\"points\":[";
+
+  HistorySample sample;
+  for (uint16_t i = 0; i < HistoryBuffer::count(); i++) {
+    if (!HistoryBuffer::getSample(i, sample)) {
+      break;
+    }
+    if (i > 0) {
+      json += ",";
+    }
+    json += "{\"t\":";
+    json += String(sample.epoch);
+    json += ",\"temp\":";
+    json += jsonFloatOrNull(sample.temperature);
+    json += ",\"hum\":";
+    json += jsonFloatOrNull(sample.humidity);
+    json += ",\"pres\":";
+    json += jsonFloatOrNull(sample.pressure);
+    json += "}";
+  }
+
+  json += "]}";
   server.send(200, "application/json", json);
 }
 
@@ -71,6 +111,7 @@ void WebServerManager::begin() {
 
   server.on("/api/data", HTTP_GET, handleApiData);
   server.on("/api/status", HTTP_GET, handleApiStatus);
+  server.on("/api/history", HTTP_GET, handleApiHistory);
 
   server.serveStatic("/style.css", LittleFS, "/style.css");
   server.serveStatic("/script.js", LittleFS, "/script.js");

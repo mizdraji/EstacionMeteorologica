@@ -43,3 +43,18 @@ uint8_t NtpTime::minutes() {
 uint8_t NtpTime::seconds() {
   return (uint8_t)timeClient.getSeconds();
 }
+
+uint32_t NtpTime::epoch() {
+  return (uint32_t)timeClient.getEpochTime();
+}
+
+void NtpTime::formatTime(char* buffer, size_t bufferSize) {
+  if (buffer == nullptr || bufferSize < 9) {
+    return;
+  }
+  if (!isSynced()) {
+    snprintf(buffer, bufferSize, "--:--:--");
+    return;
+  }
+  snprintf(buffer, bufferSize, "%02u:%02u:%02u", hours(), minutes(), seconds());
+}

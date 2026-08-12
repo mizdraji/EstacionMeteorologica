@@ -4,7 +4,7 @@
 // Estación Meteorológica Local - Configuración centralizada
 // ============================================================
 
-#define FIRMWARE_VERSION "1.1.0"
+#define FIRMWARE_VERSION "1.2.0"
 
 // Credenciales en secrets.h (no versionado). Ver secrets.h.example.
 #include "secrets.h"
@@ -49,6 +49,11 @@
 #define OTA_INTERVAL_MS         30
 #define SYSTEM_INTERVAL_MS      1000
 #define SERIAL_INTERVAL_MS      5000
+
+// --- Historial web (ring buffer en RAM) ---
+// HISTORY_CAPACITY * HISTORY_INTERVAL_MS ~= ventana en minutos
+#define HISTORY_INTERVAL_MS     30000
+#define HISTORY_CAPACITY        60
 
 // --- Web ---
 #define WEB_SERVER_PORT         80

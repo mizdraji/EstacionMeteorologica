@@ -8,6 +8,7 @@
 #include "../network/OTAManager.h"
 #include "../network/SerialDiagnostics.h"
 #include "../network/NtpTime.h"
+#include "HistoryBuffer.h"
 #include "../display/oled/OLEDDisplayModule.h"
 #include <TaskScheduler.h>
 
@@ -27,6 +28,7 @@ static void taskOTACallback();
 static void taskSerialCallback();
 static void taskSystemCallback();
 static void taskNtpCallback();
+static void taskHistoryCallback();
 
 static Task taskDHT(DHT_INTERVAL_MS, TASK_FOREVER, &taskDHTCallback);
 static Task taskBMP(BMP180_INTERVAL_MS, TASK_FOREVER, &taskBMPCallback);
@@ -37,11 +39,13 @@ static Task taskOTA(OTA_INTERVAL_MS, TASK_FOREVER, &taskOTACallback);
 static Task taskSerial(SERIAL_INTERVAL_MS, TASK_FOREVER, &taskSerialCallback);
 static Task taskSystem(SYSTEM_INTERVAL_MS, TASK_FOREVER, &taskSystemCallback);
 static Task taskNtp(NTP_TASK_INTERVAL_MS, TASK_FOREVER, &taskNtpCallback);
+static Task taskHistory(HISTORY_INTERVAL_MS, TASK_FOREVER, &taskHistoryCallback);
 
 void TaskManager::begin() {
   bootMillis = millis();
 
   WeatherData::instance().init();
+  HistoryBuffer::begin();
   sensorManager.begin();
   displayManager.begin();
 
@@ -57,6 +61,7 @@ void TaskManager::begin() {
   scheduler.addTask(taskSerial);
   scheduler.addTask(taskSystem);
   scheduler.addTask(taskNtp);
+  scheduler.addTask(taskHistory);
 
   taskDHT.enable();
   taskBMP.enable();
@@ -67,6 +72,7 @@ void TaskManager::begin() {
   taskSerial.enable();
   taskSystem.enable();
   taskNtp.enable();
+  taskHistory.enable();
 
   SerialDiagnostics::printBootBanner();
 }
@@ -112,4 +118,8 @@ static void taskSystemCallback() {
 static void taskNtpCallback() {
   NtpTime::update();
   WeatherData::instance().ntpSynced = NtpTime::isSynced();
+}
+
+static void taskHistoryCallback() {
+  HistoryBuffer::pushFromWeatherData();
 }
