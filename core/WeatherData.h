@@ -17,13 +17,9 @@ struct WeatherData {
   bool oledOK;
   bool ntpSynced;
 
-  unsigned long lastBMPReading;
-  unsigned long lastDHTReading;
-
   bool wifiConnected;
   int wifiRSSI;
   IPAddress ipAddress;
-  const char* hostname;
   unsigned long uptime;
   const char* firmwareVersion;
 

@@ -21,7 +21,6 @@ bool Max7219Display::begin(uint8_t dinPin, uint8_t clkPin, uint8_t csPin) {
   setIntensity(2);
   clear();
 
-  _ready = true;
   return true;
 }
 

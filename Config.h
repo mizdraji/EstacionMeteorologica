@@ -10,9 +10,7 @@
 #include "secrets.h"
 
 #define HOSTNAME        "weather-station-01"
-
-// --- OTA ---
-#define OTA_HOSTNAME    "weather-station-01"
+#define OTA_HOSTNAME    HOSTNAME
 
 // --- I2C BMP180 (tutorial WeatherInstrument: D2/D1) ---
 #define BMP180_SDA_PIN  4   // D2
@@ -54,7 +52,6 @@
 
 // --- Web ---
 #define WEB_SERVER_PORT         80
-#define WEB_API_REFRESH_MS      2000
 
 // Valor sentinela para lecturas inválidas (no confundir con 0 real)
 #define WEATHER_VALUE_INVALID   (-9999.0f)

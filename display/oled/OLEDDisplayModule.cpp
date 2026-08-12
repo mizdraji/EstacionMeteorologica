@@ -2,7 +2,6 @@
 #include "../../Config.h"
 #include "../../utils/I2CBus.h"
 #include "SSD1306Wire.h"
-#include "WeatherStationFonts.h"
 
 static SSD1306Wire display(OLED_I2C_ADDRESS, OLED_SDA_PIN, OLED_SCL_PIN);
 bool OLEDDisplayModule::_ready = false;
