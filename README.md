@@ -10,7 +10,9 @@ Firmware modular para medición local con BMP180, DHT11, MAX7219 (hora NTP) y OL
 
 ## Configuración
 
-Editar `Config.h`: WiFi, OTA, GPIO, NTP y `SEA_LEVEL_PRESSURE_HPA`.
+1. Copiá `secrets.h.example` → `secrets.h`
+2. Completá WiFi y password OTA en `secrets.h` (ese archivo **no** se sube a git)
+3. Ajustá en `Config.h` el resto: GPIO, NTP, `SEA_LEVEL_PRESSURE_HPA`, hostname
 
 ## GPIO (kit ideaspark + MAX7219)
 
@@ -48,7 +50,7 @@ Subir carpeta `data/` con plugin LittleFS Data Upload.
 
 ## OTA
 
-Host `weather-station-01`, contraseña en `OTA_PASSWORD`.
+Host `weather-station-01`, contraseña en `OTA_PASSWORD` (`secrets.h`).
 
 ## Serial
 
