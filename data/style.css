@@ -15,6 +15,14 @@ header {
   border-bottom: 1px solid #334155;
 }
 
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 header h1 {
   margin: 0 0 0.5rem;
   font-size: 1.5rem;
@@ -25,6 +33,27 @@ header h1 {
   color: #94a3b8;
 }
 
+.clock-panel {
+  text-align: right;
+  min-width: 160px;
+}
+
+.clock-label,
+.clock-note {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.clock-value {
+  margin: 0.2rem 0;
+  font-size: 2.4rem;
+  font-weight: bold;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  color: #f8fafc;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -32,11 +61,36 @@ header h1 {
   padding: 1rem;
 }
 
+.charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.75rem;
+  padding: 0 1rem 1.5rem;
+}
+
 .card {
   background: #1e293b;
   border: 1px solid #334155;
   border-radius: 12px;
   padding: 1rem;
+}
+
+.chart-card {
+  padding: 0.75rem;
+}
+
+.chart-card h2 {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.chart-card canvas {
+  width: 100%;
+  max-height: 140px;
+  height: 140px;
+  display: block;
+  background: #0b1220;
+  border-radius: 8px;
 }
 
 .card h2 {
@@ -64,5 +118,13 @@ header h1 {
 @media (max-width: 480px) {
   .value {
     font-size: 1.6rem;
+  }
+
+  .clock-panel {
+    text-align: left;
+  }
+
+  .clock-value {
+    font-size: 2rem;
   }
 }

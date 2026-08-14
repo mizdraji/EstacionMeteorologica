@@ -1,6 +1,7 @@
 // Unity build para Arduino IDE: compila modulos en subcarpetas.
 #include "core/WeatherData.cpp"
 #include "core/SensorManager.cpp"
+#include "core/HistoryBuffer.cpp"
 #include "core/TaskManager.cpp"
 #include "utils/I2CBus.cpp"
 #include "sensors/BMP085.cpp"
