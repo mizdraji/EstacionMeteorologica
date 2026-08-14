@@ -7,12 +7,40 @@ Firmware modular para medición local con BMP180, DHT11, MAX7219 (hora NTP) y OL
 - ESP8266 board support (NodeMCU 1.0)
 - TaskScheduler (arkhipenko)
 - NTPClient (Fabrice Weinberg)
+- **WiFiManager** (tzapu) — portal de configuración WiFi
+
+En Arduino Library Manager: buscar `WiFiManager` de **tzapu** e instalar.
 
 ## Configuración
 
 1. Copiá `secrets.h.example` → `secrets.h`
-2. Completá WiFi y password OTA en `secrets.h` (ese archivo **no** se sube a git)
-3. Ajustá en `Config.h` el resto: GPIO, NTP, `SEA_LEVEL_PRESSURE_HPA`, hostname
+2. Completá solo `OTA_PASSWORD` en `secrets.h` (ese archivo **no** se sube a git)
+3. Ajustá en `Config.h` el resto: GPIO, NTP, `SEA_LEVEL_PRESSURE_HPA`, hostname, timeouts WiFi
+
+**WiFi no se hardcodea.** Las credenciales las guarda WiFiManager en la flash del SDK WiFi (no en LittleFS).
+
+## WiFi (portal de configuración)
+
+Al boot el firmware intenta conectar con la red guardada. Si no hay credenciales o falla:
+
+1. El ESP abre un AP llamado como `HOSTNAME` (por defecto `weather-station-01`)
+2. Con tu teléfono/PC, conectate a ese AP
+3. Abrí el navegador en `http://192.168.4.1`
+4. Elegí tu red WiFi, ingresá la contraseña y guardá
+5. El ESP reinicia/conecta; web, OTA y NTP arrancan **después** de tener WiFi
+
+Serial (115200) muestra mensajes `[WIFI] ...` durante el proceso. El portal tiene timeout (`WIFI_CONFIG_PORTAL_TIMEOUT_SEC`, por defecto 180 s); si expira, los sensores siguen activos y se reintenta en background.
+
+### Borrar / cambiar red WiFi
+
+- Desde el portal de WiFiManager (si se vuelve a abrir), o
+- Borrando la flash WiFi del ESP (p. ej. “Erase Flash: All Flash Contents” al subir, o un sketch que llame `WiFi.disconnect(true)` / `WiFiManager::resetSettings()`)
+
+No hay botón físico de reset de credenciales en este firmware (TODO opcional a futuro).
+
+### LittleFS vs WiFiManager
+
+LittleFS (UI web en `data/`) y WiFiManager no compiten por el mismo almacenamiento: WiFiManager persiste SSID/password en la flash del SDK WiFi; LittleFS usa su partición FS. Podés subir `data/` con normalidad.
 
 ## Pinout de la placa
 
@@ -44,7 +72,7 @@ El MAX7219 muestra solo la hora local (`HH-MM-SS`) sincronizada por NTP (`3.sout
 
 1. Abrir `EstacionMeteorologica.ino`
 2. Placa: NodeMCU 1.0 (ESP-12E Module)
-3. Instalar librerías **TaskScheduler** y **NTPClient**
+3. Instalar librerías **TaskScheduler**, **NTPClient** y **WiFiManager** (tzapu)
 4. Subir sketch
 
 Arduino IDE 1.8 solo compila `.cpp` en la raiz del sketch. Por eso existe `AllModules.cpp`, que incluye los modulos en subcarpetas.

@@ -3,12 +3,35 @@
 #include "WebServerManager.h"
 #include "OTAManager.h"
 #include <ESP8266mDNS.h>
+#include <WiFiManager.h>
 
 void StationWiFi::begin() {
-  WiFi.persistent(false);
   WiFi.mode(WIFI_STA);
   WiFi.hostname(HOSTNAME);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+  WiFiManager wm;
+  wm.setDebugOutput(false);
+  wm.setHostname(HOSTNAME);
+  wm.setConfigPortalTimeout(WIFI_CONFIG_PORTAL_TIMEOUT_SEC);
+  wm.setConnectTimeout(WIFI_CONNECT_TIMEOUT_SEC);
+
+  Serial.println(F("[WIFI] Intentando credenciales guardadas..."));
+  Serial.print(F("[WIFI] Si falla, portal AP: "));
+  Serial.println(HOSTNAME);
+  Serial.print(F("[WIFI] Abrí http://192.168.4.1 (timeout "));
+  Serial.print(WIFI_CONFIG_PORTAL_TIMEOUT_SEC);
+  Serial.println(F(" s)"));
+
+  // Persiste SSID/pass en flash del SDK WiFi (no usa LittleFS).
+  bool connected = wm.autoConnect(HOSTNAME);
+
+  if (connected) {
+    Serial.print(F("[WIFI] Conectado. IP: "));
+    Serial.println(WiFi.localIP());
+  } else {
+    Serial.println(F("[WIFI] Sin conexión tras portal/timeout; reintento en background"));
+  }
+
   _lastAttempt = millis();
   _servicesStarted = false;
 }
@@ -30,6 +53,7 @@ void StationWiFi::update() {
       WebServerManager::begin();
       OTAManager::begin();
       _servicesStarted = true;
+      Serial.println(F("[WIFI] Servicios web/OTA/mDNS iniciados"));
     }
     return;
   }
@@ -39,11 +63,13 @@ void StationWiFi::update() {
     WebServerManager::shutdown();
     OTAManager::shutdown();
     _servicesStarted = false;
+    Serial.println(F("[WIFI] Desconectado; servicios detenidos"));
   }
 
   if (millis() - _lastAttempt >= WIFI_INTERVAL_MS) {
+    Serial.println(F("[WIFI] Reintentando con credenciales guardadas..."));
     WiFi.disconnect();
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    WiFi.begin();  // usa SSID/pass persistidos por WiFiManager
     _lastAttempt = millis();
   }
 }

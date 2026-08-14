@@ -23,6 +23,7 @@ void SerialDiagnostics::printBootBanner() {
   Serial.println();
   Serial.print(F("Hostname: "));
   Serial.println(HOSTNAME);
+  Serial.println(F("WiFi: WiFiManager (portal AP si hace falta)"));
   Serial.print(F("NTP: "));
   Serial.println(NTP_SERVER);
   Serial.println(F("========================================"));

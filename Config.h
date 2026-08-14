@@ -4,13 +4,21 @@
 // Estación Meteorológica Local - Configuración centralizada
 // ============================================================
 
-#define FIRMWARE_VERSION "1.2.0"
+#define FIRMWARE_VERSION "1.3.0"
 
-// Credenciales en secrets.h (no versionado). Ver secrets.h.example.
+// Credenciales locales (OTA). WiFi se configura con WiFiManager (portal AP).
+// Ver secrets.h.example. secrets.h no se versiona.
 #include "secrets.h"
 
 #define HOSTNAME        "weather-station-01"
 #define OTA_HOSTNAME    HOSTNAME
+
+// --- WiFiManager (portal de configuración) ---
+// Timeout del portal AP si no hay credenciales o falla la conexión.
+#define WIFI_CONFIG_PORTAL_TIMEOUT_SEC  180
+// Timeout al intentar conectar con credenciales guardadas antes de abrir portal.
+#define WIFI_CONNECT_TIMEOUT_SEC        20
+
 
 // --- I2C BMP180 (tutorial WeatherInstrument: D2/D1) ---
 #define BMP180_SDA_PIN  4   // D2
