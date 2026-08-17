@@ -40,7 +40,7 @@ pio run -t uploadfs     # carpeta data/ → LittleFS
 pio device monitor      # serial 115200
 ```
 
-Más detalle: [docs/platformio.md](docs/platformio.md). LittleFS: [docs/littlefs.md](docs/littlefs.md).
+UI (hormiga → PROJECT TASKS), Erase Flash y prueba limpia: [docs/platformio.md](docs/platformio.md). LittleFS: [docs/littlefs.md](docs/littlefs.md).
 
 ## Acceso
 

@@ -14,14 +14,20 @@ Si no subís `data/`, la API puede responder pero la página en `/` falla o qued
 
 En `platformio.ini` está `board_build.filesystem = littlefs`.
 
+### UI
+
+Icono **hormiga** → **PROJECT TASKS** → `nodemcuv2` → **Platform** → **Upload Filesystem Image**.
+
+### CLI
+
 ```powershell
 # Cerrar el monitor serie antes de subir FS
 pio run -t uploadfs
 ```
 
-Ver también [platformio.md](platformio.md).
+No hace falta recompilar el firmware solo para cambiar HTML/CSS/JS: alcanza con subir el filesystem.
 
-No hace falta recompilar el firmware solo para cambiar HTML/CSS/JS: alcanza con `uploadfs`.
+Flujo completo (Erase → Upload → Upload FS → Monitor), Erase Flash vs Clean, y resto de tareas: [platformio.md](platformio.md).
 
 ## Arduino IDE (legado)
 
@@ -44,8 +50,10 @@ Instalá el plugin “ESP8266 LittleFS Data Upload” y usá
 1. Placa: **NodeMCU 1.0 (ESP-12E Module)** / env `nodemcuv2` en PlatformIO.
 2. Elegí el **puerto COM** correcto.
 3. **Cerrá el Serial Monitor** (si está abierto, el upload suele fallar).
-4. Ejecutá `pio run -t uploadfs` (o el comando del plugin en Arduino IDE).
+4. Subí el FS: **Upload Filesystem Image** en la UI, o `pio run -t uploadfs`.
 5. Esperá el mensaje de éxito en la consola.
+
+Tras **Erase Flash**, el FS queda vacío: hay que volver a subir `data/` (y WiFiManager pedirá red de nuevo).
 
 ## Tamaño de partición
 
@@ -56,7 +64,7 @@ El board `nodemcuv2` en PlatformIO usa un esquema con espacio para FS por defect
 | Síntoma | Qué revisar |
 |---------|-------------|
 | Upload falla con puerto ocupado | **Cerrar Serial Monitor** y reintentar |
-| Web en `/` rota, API OK | No se subió `data/` o se borró la flash (Erase All) |
+| Web en `/` rota, API OK | No se subió `data/` o se borró la flash (**Erase Flash**) |
 | `[WEB] LittleFS mount failed` | Partición FS incorrecta o flash borrada sin re-subir FS |
 | `pio` no encontrado | Instalar PlatformIO Core o usar la extensión; ver [platformio.md](platformio.md) |
 

@@ -23,20 +23,34 @@ Este proyecto se construye con [PlatformIO](https://platformio.org/) (framework 
 2. Completá solo `OTA_PASSWORD` (WiFi lo gestiona WiFiManager; ver [wifi-manager.md](wifi-manager.md))
 3. Ajustá pines / NTP / hostname en `src/Config.h` si hace falta
 
-## Comandos (desde la raíz del repo)
+## UI de PlatformIO (VS Code / Cursor)
+
+Icono de la **hormiga** (barra lateral) → **PROJECT TASKS** → `nodemcuv2`:
+
+| Sección | Tarea | Qué hace |
+|---------|-------|----------|
+| General | **Build** | Compila el firmware |
+| General | **Upload** | Sube el firmware |
+| General | **Clean** | Borra artefactos de build locales (`.pio/build/…`). **No** toca la flash del ESP |
+| General | **Monitor** | Serial a 115200 |
+| Platform | **Upload Filesystem Image** | Sube la carpeta `data/` a LittleFS |
+| Platform | **Erase Flash** | Borra **toda** la flash del ESP (firmware, FS, WiFi guardado, etc.) |
+
+No confundir **Erase Flash** (flash del micro) con **Clean** (solo build local).
+
+Cerrá el Monitor antes de Upload / Upload Filesystem Image / Erase Flash; si el puerto está ocupado, el comando falla.
+
+## Comandos CLI (equivalentes)
+
+Desde la raíz del repo:
 
 ```powershell
-# Compilar
-pio run
-
-# Subir firmware
-pio run -t upload
-
-# Subir LittleFS (carpeta data/)
-pio run -t uploadfs
-
-# Monitor serie (115200)
-pio device monitor
+pio run                 # Build
+pio run -t upload       # Upload firmware
+pio run -t uploadfs     # Upload Filesystem Image (carpeta data/)
+pio run -t erase        # Erase Flash
+pio device monitor      # Monitor (115200)
+pio run -t clean        # Clean (solo build local)
 ```
 
 Puerto COM: si no se detecta solo, en `platformio.ini` agregá por ejemplo:
@@ -45,6 +59,22 @@ Puerto COM: si no se detecta solo, en `platformio.ini` agregá por ejemplo:
 upload_port = COMx
 monitor_port = COMx
 ```
+
+## Prueba limpia (orden recomendado)
+
+Tras un erase o cuando quieras partir de flash vacía:
+
+1. **Erase Flash** (`pio run -t erase`)
+2. **Upload** del firmware (`pio run -t upload`)
+3. **Upload Filesystem Image** (`pio run -t uploadfs`) — carpeta `data/`
+4. **Monitor** (`pio device monitor`) — 115200
+
+Notas tras **Erase Flash**:
+
+- WiFiManager vuelve a pedir red (portal cautivo); las credenciales se borraron.
+- LittleFS queda vacío: hay que volver a subir `data/` o la web en `/` no carga.
+
+Detalle de LittleFS y troubleshooting: [littlefs.md](littlefs.md).
 
 ## Dependencias (`lib_deps`)
 
@@ -56,9 +86,7 @@ PlatformIO las descarga al primer `pio run` en `.pio/` (ignorado por git).
 
 ## LittleFS
 
-`board_build.filesystem = littlefs` en `platformio.ini`. Detalle de la UI y troubleshooting: [littlefs.md](littlefs.md).
-
-Tras un *Erase All* de la flash, volvé a subir firmware **y** `uploadfs`.
+`board_build.filesystem = littlefs` en `platformio.ini`. Contenido de `data/`, plugins Arduino IDE y troubleshooting: [littlefs.md](littlefs.md).
 
 ## Serial
 
