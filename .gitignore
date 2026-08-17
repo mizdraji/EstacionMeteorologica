@@ -1,7 +1,9 @@
 # Credenciales locales (no versionar)
 secrets.h
+src/secrets.h
 
 # Artefactos de build / IDE
+.pio/
 build/
 *.hex
 *.elf
