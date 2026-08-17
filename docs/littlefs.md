@@ -4,55 +4,61 @@ Sistema de archivos en flash del ESP8266. En este proyecto guarda la **UI web** 
 
 ## Rol en el proyecto
 
-- Carpeta del repo: `data/` → se sube a la partición LittleFS del ESP.
-- Código: `network/WebServerManager.cpp` monta LittleFS y sirve esos archivos en el puerto 80.
+- Carpeta del repo: `data/` (raíz PlatformIO) → se sube a la partición LittleFS del ESP.
+- Código: `src/network/WebServerManager.cpp` monta LittleFS y sirve esos archivos en el puerto 80.
 - **No** se usa para credenciales WiFi (eso es WiFiManager / flash del SDK; ver [wifi-manager.md](wifi-manager.md)).
 
 Si no subís `data/`, la API puede responder pero la página en `/` falla o queda vacía.
 
-## Arduino IDE 2.x — instalar el plugin
+## PlatformIO (recomendado)
 
-En IDE 2 no viene el uploader clásico de IDE 1.8. Usá el plugin de earlephilhower:
+En `platformio.ini` está `board_build.filesystem = littlefs`.
+
+```powershell
+# Cerrar el monitor serie antes de subir FS
+pio run -t uploadfs
+```
+
+Ver también [platformio.md](platformio.md).
+
+No hace falta recompilar el firmware solo para cambiar HTML/CSS/JS: alcanza con `uploadfs`.
+
+## Arduino IDE (legado)
+
+Si aún usás el IDE en otro checkout antiguo:
+
+### Arduino IDE 2.x — plugin
 
 1. Descargá el `.vsix` desde releases de  
    [earlephilhower/arduino-littlefs-upload](https://github.com/earlephilhower/arduino-littlefs-upload/releases)
-2. En Arduino IDE 2: **Ctrl+Shift+P** (o Cmd+Shift+P) → `Install from VSIX...`
-3. Elegí el archivo `.vsix` descargado
-4. Reiniciá el IDE si hace falta
+2. En Arduino IDE 2: **Ctrl+Shift+P** → `Install from VSIX...`
+3. Uso: **Ctrl+Shift+P** → `Upload LittleFS to Pico/ESP8266`
 
-Uso: con el sketch abierto y la placa/puerto seleccionados →  
-**Ctrl+Shift+P** → `Upload LittleFS to Pico/ESP8266`
+### Arduino IDE 1.8
 
-(El comando sirve también para ESP8266 pese al nombre.)
-
-## Arduino IDE 1.8 (breve)
-
-Instalá el plugin “ESP8266 LittleFS Data Upload” (herramientas de la comunidad ESP8266) y usá el menú  
+Instalá el plugin “ESP8266 LittleFS Data Upload” y usá  
 **Tools → ESP8266 LittleFS Data Upload**.
 
 ## Cómo subir `data/`
 
-1. Placa: **NodeMCU 1.0 (ESP-12E Module)** (o la misma que usás para el sketch).
+1. Placa: **NodeMCU 1.0 (ESP-12E Module)** / env `nodemcuv2` en PlatformIO.
 2. Elegí el **puerto COM** correcto.
 3. **Cerrá el Serial Monitor** (si está abierto, el upload suele fallar).
-4. Ejecutá el upload de LittleFS (IDE 2: comando de arriba; IDE 1.8: menú Tools).
+4. Ejecutá `pio run -t uploadfs` (o el comando del plugin en Arduino IDE).
 5. Esperá el mensaje de éxito en la consola.
-
-No hace falta recompilar el sketch solo para cambiar HTML/CSS/JS: alcanza con volver a subir LittleFS.
 
 ## Tamaño de partición
 
-En Tools del core ESP8266, la opción **Flash Size** / esquema de partición debe dejar espacio para FS (p. ej. “4MB (FS:2MB…)” o similar). Si el FS es 0, el upload falla o no hay sitio para `data/`.
+El board `nodemcuv2` en PlatformIO usa un esquema con espacio para FS por defecto. Si el upload falla por tamaño, revisá `board_build.ldscript` / documentación del core ESP8266.
 
 ## Troubleshooting
 
 | Síntoma | Qué revisar |
 |---------|-------------|
-| `Not found` / no aparece el comando | Plugin `.vsix` no instalado o IDE sin reiniciar |
-| `No port specified` / no sube | Puerto COM no elegido; cable/driver; cerrar otros programas que usen el puerto |
 | Upload falla con puerto ocupado | **Cerrar Serial Monitor** y reintentar |
 | Web en `/` rota, API OK | No se subió `data/` o se borró la flash (Erase All) |
 | `[WEB] LittleFS mount failed` | Partición FS incorrecta o flash borrada sin re-subir FS |
+| `pio` no encontrado | Instalar PlatformIO Core o usar la extensión; ver [platformio.md](platformio.md) |
 
 ## Contenido típico de `data/`
 

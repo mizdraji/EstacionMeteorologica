@@ -6,18 +6,16 @@ Configuración de WiFi **sin hardcodear** SSID/password en el firmware.
 
 [WiFiManager](https://github.com/tzapu/WiFiManager) (autor **tzapu**) intenta conectar con credenciales ya guardadas en la flash del ESP. Si no hay red o falla la conexión, abre un **portal de configuración** (Access Point + página web) para elegir la red desde el teléfono o la PC.
 
-En este proyecto vive en `network/StationWiFi.cpp`. Web, OTA, mDNS y NTP arrancan **después** de tener WiFi.
+En este proyecto vive en `src/network/StationWiFi.cpp`. Web, OTA, mDNS y NTP arrancan **después** de tener WiFi.
 
 ## Librería
 
-1. Arduino IDE → Library Manager
-2. Buscar `WiFiManager`
-3. Instalar la de **tzapu** (no confundir con forks homónimos)
+Con PlatformIO está en `lib_deps` de `platformio.ini` (tzapu/WiFiManager). Detalle de build: [platformio.md](platformio.md).
 
 ## Primer uso (portal AP)
 
 1. Subí el firmware y abrí Serial a **115200** baud (mensajes `[WIFI] ...`).
-2. Si no hay credenciales válidas, el ESP crea un AP con el nombre de `HOSTNAME` en `Config.h` (por defecto `weather-station-01`).
+2. Si no hay credenciales válidas, el ESP crea un AP con el nombre de `HOSTNAME` en `src/Config.h` (por defecto `weather-station-01`).
 3. Conectate a ese AP desde el teléfono/PC.
 4. Abrí el navegador en [http://192.168.4.1](http://192.168.4.1).
 5. Elegí tu red WiFi, ingresá la contraseña y guardá.
@@ -25,7 +23,7 @@ En este proyecto vive en `network/StationWiFi.cpp`. Web, OTA, mDNS y NTP arranca
 
 Los siguientes boots usan la red guardada (sin portal), salvo que falle la conexión.
 
-## Timeouts (`Config.h`)
+## Timeouts (`src/Config.h`)
 
 | Macro | Default | Rol |
 |-------|---------|-----|
@@ -38,8 +36,8 @@ Si el portal expira sin configurar, los sensores siguen activos y `StationWiFi::
 ## Relación con `secrets.h` / OTA
 
 - **WiFi:** no va en `secrets.h`. Lo gestiona WiFiManager.
-- **OTA:** sí. En `secrets.h` solo hace falta `OTA_PASSWORD` (plantilla: `secrets.h.example`).
-- `secrets.h` está en `.gitignore` y no se versiona.
+- **OTA:** sí. En `src/secrets.h` solo hace falta `OTA_PASSWORD` (plantilla: `src/secrets.h.example`).
+- `src/secrets.h` está en `.gitignore` y no se versiona.
 
 ## Dónde se guardan las credenciales
 

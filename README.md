@@ -2,38 +2,45 @@
 
 Firmware modular para medición local con BMP180, DHT11, MAX7219 (hora NTP) y OLED de diagnóstico.
 
+Proyecto gestionado con **PlatformIO** (placa NodeMCU 1.0).
+
 ## Documentación
 
 | Tema | Archivo |
 |------|---------|
+| PlatformIO (build / upload / FS) | [docs/platformio.md](docs/platformio.md) |
 | WiFi (portal WiFiManager) | [docs/wifi-manager.md](docs/wifi-manager.md) |
-| LittleFS (UI web / plugin) | [docs/littlefs.md](docs/littlefs.md) |
+| LittleFS (UI web) | [docs/littlefs.md](docs/littlefs.md) |
 | Pinout y conexiones | [docs/pinout.md](docs/pinout.md) |
 
 ## Librerías
 
-- ESP8266 board support (NodeMCU 1.0)
+Declaradas en `platformio.ini` (`lib_deps`); PlatformIO las instala solo:
+
 - TaskScheduler (arkhipenko)
-- NTPClient (Fabrice Weinberg)
+- NTPClient (Fabrice Weinberg / arduino-libraries)
 - WiFiManager (tzapu) — detalle en [docs/wifi-manager.md](docs/wifi-manager.md)
 
 ## Configuración rápida
 
-1. Copiá `secrets.h.example` → `secrets.h`
+1. Copiá `src/secrets.h.example` → `src/secrets.h`
 2. Completá solo `OTA_PASSWORD` (WiFi **no** va en secrets; ver [docs/wifi-manager.md](docs/wifi-manager.md))
-3. Ajustá GPIO, NTP, hostname y timeouts en `Config.h`
+3. Ajustá GPIO, NTP, hostname y timeouts en `src/Config.h`
 
-`secrets.h` no se versiona (`.gitignore`).
+`src/secrets.h` no se versiona (`.gitignore`).
 
-## Compilar y subir
+## Compilar y subir (PlatformIO)
 
-1. Abrir `EstacionMeteorologica.ino`
-2. Placa: NodeMCU 1.0 (ESP-12E Module)
-3. Instalar las librerías de arriba
-4. Subir sketch
-5. Subir carpeta `data/` a LittleFS — [docs/littlefs.md](docs/littlefs.md)
+Desde la raíz del repo:
 
-Arduino IDE 1.8 solo compila `.cpp` en la raíz del sketch; por eso existe `AllModules.cpp`.
+```powershell
+pio run                 # compilar
+pio run -t upload       # firmware
+pio run -t uploadfs     # carpeta data/ → LittleFS
+pio device monitor      # serial 115200
+```
+
+Más detalle: [docs/platformio.md](docs/platformio.md). LittleFS: [docs/littlefs.md](docs/littlefs.md).
 
 ## Acceso
 
@@ -45,7 +52,7 @@ Historial: ring buffer en RAM (`HISTORY_CAPACITY` × `HISTORY_INTERVAL_MS`); se 
 
 ## OTA
 
-Host `weather-station-01`, contraseña en `OTA_PASSWORD` (`secrets.h`).
+Host `weather-station-01`, contraseña en `OTA_PASSWORD` (`src/secrets.h`).
 
 ## Serial
 
