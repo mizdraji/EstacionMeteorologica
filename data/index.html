@@ -32,8 +32,8 @@
         <p class="value" id="temp-bmp">N/A</p>
       </section>
       <section class="card">
-        <h2>Temperatura DHT11</h2>
-        <p class="value" id="temp-dht">N/A</p>
+        <h2>Temperatura AHT10</h2>
+        <p class="value" id="temp-aht">N/A</p>
       </section>
       <section class="card">
         <h2>Humedad</h2>
@@ -48,10 +48,43 @@
         <p class="value" id="altitude">N/A</p>
         <p class="note">Estimada según presión de referencia configurada en el firmware.</p>
       </section>
+      <section class="card compare-card">
+        <h2>Referencia / Clima externo</h2>
+        <p class="note" id="external-desc">OpenWeatherMap</p>
+        <div class="compare-row">
+          <div>
+            <p class="compare-label">Temp local</p>
+            <p class="value compare-value" id="cmp-temp-local">N/A</p>
+          </div>
+          <div>
+            <p class="compare-label">Temp API</p>
+            <p class="value compare-value" id="cmp-temp-ext">N/A</p>
+          </div>
+          <div>
+            <p class="compare-label">Δ temp</p>
+            <p class="value compare-value" id="cmp-temp-delta">N/A</p>
+          </div>
+        </div>
+        <div class="compare-row">
+          <div>
+            <p class="compare-label">Humedad local</p>
+            <p class="value compare-value" id="cmp-hum-local">N/A</p>
+          </div>
+          <div>
+            <p class="compare-label">Humedad API</p>
+            <p class="value compare-value" id="cmp-hum-ext">N/A</p>
+          </div>
+          <div>
+            <p class="compare-label">Δ humedad</p>
+            <p class="value compare-value" id="cmp-hum-delta">N/A</p>
+          </div>
+        </div>
+        <p class="note" id="external-meta">Sin datos externos aún</p>
+      </section>
       <section class="card">
         <h2>Sensores</h2>
         <p id="sensor-bmp">BMP180: N/A</p>
-        <p id="sensor-dht">DHT11: N/A</p>
+        <p id="sensor-aht">AHT10: N/A</p>
       </section>
       <section class="card">
         <h2>Sistema</h2>

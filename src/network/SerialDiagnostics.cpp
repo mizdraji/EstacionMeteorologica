@@ -14,8 +14,8 @@ void SerialDiagnostics::printBootBanner() {
   Serial.println();
   Serial.print(F("BMP180: "));
   Serial.println(data.bmp180OK ? F("OK") : F("FAIL"));
-  Serial.print(F("DHT11: "));
-  Serial.println(data.dht11OK ? F("OK") : F("FAIL"));
+  Serial.print(F("AHT10: "));
+  Serial.println(data.aht10OK ? F("OK") : F("FAIL"));
   Serial.print(F("MAX7219: "));
   Serial.println(data.max7219OK ? F("OK") : F("FAIL"));
   Serial.print(F("OLED: "));
@@ -26,6 +26,9 @@ void SerialDiagnostics::printBootBanner() {
   Serial.println(F("WiFi: WiFiManager (portal AP si hace falta)"));
   Serial.print(F("NTP: "));
   Serial.println(NTP_SERVER);
+  Serial.print(F("OWM: cada "));
+  Serial.print(OWM_INTERVAL_MS / 60000UL);
+  Serial.println(F(" min"));
   Serial.println(F("========================================"));
 }
 
@@ -44,5 +47,7 @@ void SerialDiagnostics::printPeriodicStatus() {
   Serial.print(F(" Heap: "));
   Serial.print(data.freeHeap);
   Serial.print(F(" NTP: "));
-  Serial.println(data.ntpSynced ? F("OK") : F("SYNC..."));
+  Serial.print(data.ntpSynced ? F("OK") : F("SYNC..."));
+  Serial.print(F(" OWM: "));
+  Serial.println(data.externalOK ? F("OK") : F("N/A"));
 }

@@ -15,6 +15,20 @@ function setText(id, text) {
   }
 }
 
+function formatDelta(localValue, externalValue, suffix) {
+  if (
+    localValue === null ||
+    localValue === undefined ||
+    externalValue === null ||
+    externalValue === undefined
+  ) {
+    return "N/A";
+  }
+  const delta = localValue - externalValue;
+  const sign = delta > 0 ? "+" : "";
+  return `${sign}${delta.toFixed(1)}${suffix}`;
+}
+
 function labelFromEpoch(epoch, index, total, intervalSec) {
   if (epoch && epoch > 100000) {
     // NTPClient aplica el offset local al epoch: usar getters UTC.
@@ -124,13 +138,39 @@ async function refreshData() {
 
     setText("temp-main", formatValue(data.temperature_main, " °C"));
     setText("temp-bmp", formatValue(data.temperature_bmp, " °C"));
-    setText("temp-dht", formatValue(data.temperature_dht, " °C"));
+    setText("temp-aht", formatValue(data.temperature_aht, " °C"));
     setText("humidity", formatValue(data.humidity, " %"));
     setText("pressure", formatValue(data.pressure, " hPa"));
     setText("altitude", formatValue(data.altitude, " m"));
 
     setText("sensor-bmp", `BMP180: ${data.bmp180_ok ? "OK" : "ERROR"}`);
-    setText("sensor-dht", `DHT11: ${data.dht11_ok ? "OK" : "ERROR"}`);
+    setText("sensor-aht", `AHT10: ${data.aht10_ok ? "OK" : "ERROR"}`);
+
+    setText("cmp-temp-local", formatValue(data.temperature_main, " °C"));
+    setText("cmp-temp-ext", formatValue(data.external_temperature, " °C"));
+    setText(
+      "cmp-temp-delta",
+      formatDelta(data.temperature_main, data.external_temperature, " °C")
+    );
+    setText("cmp-hum-local", formatValue(data.humidity, " %"));
+    setText("cmp-hum-ext", formatValue(data.external_humidity, " %"));
+    setText(
+      "cmp-hum-delta",
+      formatDelta(data.humidity, data.external_humidity, " %")
+    );
+
+    const desc = data.external_description || "";
+    setText(
+      "external-desc",
+      data.external_ok
+        ? (desc ? desc : "OpenWeatherMap")
+        : (desc ? desc : "Clima externo no disponible")
+    );
+    if (data.external_ok && data.external_age_s !== null && data.external_age_s !== undefined) {
+      setText("external-meta", `Actualizado hace ${data.external_age_s}s · Δ = local − API`);
+    } else {
+      setText("external-meta", "N/A si no hay Wi-Fi, API key o falla la consulta · sensores locales siguen activos");
+    }
 
     setText("wifi", `Wi-Fi: ${status.wifi_connected ? "Conectado" : "Desconectado"}`);
     setText("rssi", `RSSI: ${status.rssi} dBm`);

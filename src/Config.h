@@ -4,9 +4,9 @@
 // Estación Meteorológica Local - Configuración centralizada
 // ============================================================
 
-#define FIRMWARE_VERSION "1.3.0"
+#define FIRMWARE_VERSION "1.5.0"
 
-// Credenciales locales (OTA). WiFi se configura con WiFiManager (portal AP).
+// Credenciales locales (OTA + OpenWeatherMap). WiFi se configura con WiFiManager (portal AP).
 // Ver secrets.h.example. secrets.h no se versiona.
 #include "secrets.h"
 
@@ -29,8 +29,8 @@
 #define OLED_SCL_PIN    14  // D5
 #define OLED_I2C_ADDRESS 0x3C
 
-// --- DHT11 (tutorial WeatherInstrument: D7) ---
-#define DHT11_PIN       13  // D7
+// --- AHT10 (mismo bus I2C que BMP180: D2/D1) ---
+#define AHT10_I2C_ADDR  0x38
 
 // --- MAX7219 8 digitos (DIN / CLK / CS) ---
 #define MAX7219_DIN_PIN  15  // D8
@@ -48,8 +48,18 @@
 // Ajustar según ubicación real; la altitud NO es precisa sin calibrar esto.
 #define SEA_LEVEL_PRESSURE_HPA  1013.25f
 
+// --- OpenWeatherMap (referencia externa; consulta el ESP, no el browser) ---
+// 1 = city id; 0 = lat/lon (recomendado; no hace falta city id)
+#define OWM_USE_CITY_ID         0
+#define OWM_CITY_ID             3435217  // solo si OWM_USE_CITY_ID = 1
+#define OWM_LAT                 (-27.45249591953252)
+#define OWM_LON                 (-58.77862759370904)
+#define OWM_INTERVAL_MS         600000   // 10 min (free tier / heap)
+#define EXTERNAL_DESC_MAX       48
+#define OWM_TASK_INTERVAL_MS    5000     // poll interno; fetch real cada OWM_INTERVAL_MS
+
 // --- Intervalos de tareas (ms) ---
-#define DHT_INTERVAL_MS         2000
+#define AHT_INTERVAL_MS         2000
 #define BMP180_INTERVAL_MS      1000
 #define DISPLAY_INTERVAL_MS     100
 #define WIFI_INTERVAL_MS        5000

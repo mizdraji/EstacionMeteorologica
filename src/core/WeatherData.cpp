@@ -5,13 +5,13 @@ WeatherData WeatherData::_instance;
 
 WeatherData::WeatherData()
   : temperatureBMP(WEATHER_VALUE_INVALID),
-    temperatureDHT(WEATHER_VALUE_INVALID),
+    temperatureAHT(WEATHER_VALUE_INVALID),
     temperatureMain(WEATHER_VALUE_INVALID),
     humidity(WEATHER_VALUE_INVALID),
     pressure(WEATHER_VALUE_INVALID),
     altitude(WEATHER_VALUE_INVALID),
     bmp180OK(false),
-    dht11OK(false),
+    aht10OK(false),
     max7219OK(false),
     oledOK(false),
     ntpSynced(false),
@@ -21,7 +21,13 @@ WeatherData::WeatherData()
     firmwareVersion(FIRMWARE_VERSION),
     otaInProgress(false),
     otaProgress(0),
-    freeHeap(0) {}
+    freeHeap(0),
+    externalTemperature(WEATHER_VALUE_INVALID),
+    externalHumidity(WEATHER_VALUE_INVALID),
+    externalOK(false),
+    externalLastUpdateMs(0) {
+  externalDescription[0] = '\0';
+}
 
 WeatherData& WeatherData::instance() {
   return _instance;
@@ -29,13 +35,13 @@ WeatherData& WeatherData::instance() {
 
 void WeatherData::init() {
   temperatureBMP = WEATHER_VALUE_INVALID;
-  temperatureDHT = WEATHER_VALUE_INVALID;
+  temperatureAHT = WEATHER_VALUE_INVALID;
   temperatureMain = WEATHER_VALUE_INVALID;
   humidity = WEATHER_VALUE_INVALID;
   pressure = WEATHER_VALUE_INVALID;
   altitude = WEATHER_VALUE_INVALID;
   bmp180OK = false;
-  dht11OK = false;
+  aht10OK = false;
   max7219OK = false;
   oledOK = false;
   ntpSynced = false;
@@ -43,6 +49,11 @@ void WeatherData::init() {
   wifiRSSI = 0;
   otaInProgress = false;
   otaProgress = 0;
+  externalTemperature = WEATHER_VALUE_INVALID;
+  externalHumidity = WEATHER_VALUE_INVALID;
+  externalDescription[0] = '\0';
+  externalOK = false;
+  externalLastUpdateMs = 0;
   updateDerivedValues();
 }
 
@@ -51,8 +62,8 @@ bool weatherValueIsValid(float value) {
 }
 
 void WeatherData::updateDerivedValues() {
-  if (dht11OK && weatherValueIsValid(temperatureDHT)) {
-    temperatureMain = temperatureDHT;
+  if (aht10OK && weatherValueIsValid(temperatureAHT)) {
+    temperatureMain = temperatureAHT;
   } else if (bmp180OK && weatherValueIsValid(temperatureBMP)) {
     temperatureMain = temperatureBMP;
   } else {
