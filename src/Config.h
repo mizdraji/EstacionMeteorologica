@@ -4,9 +4,9 @@
 // Estación Meteorológica Local - Configuración centralizada
 // ============================================================
 
-#define FIRMWARE_VERSION "1.4.0"
+#define FIRMWARE_VERSION "1.5.0"
 
-// Credenciales locales (OTA). WiFi se configura con WiFiManager (portal AP).
+// Credenciales locales (OTA + OpenWeatherMap). WiFi se configura con WiFiManager (portal AP).
 // Ver secrets.h.example. secrets.h no se versiona.
 #include "secrets.h"
 
@@ -47,6 +47,16 @@
 // Presión de referencia al nivel del mar (hPa) para altitud estimada.
 // Ajustar según ubicación real; la altitud NO es precisa sin calibrar esto.
 #define SEA_LEVEL_PRESSURE_HPA  1013.25f
+
+// --- OpenWeatherMap (referencia externa; consulta el ESP, no el browser) ---
+// 1 = city id; 0 = lat/lon (recomendado; no hace falta city id)
+#define OWM_USE_CITY_ID         0
+#define OWM_CITY_ID             3435217  // solo si OWM_USE_CITY_ID = 1
+#define OWM_LAT                 (-27.45249591953252)
+#define OWM_LON                 (-58.77862759370904)
+#define OWM_INTERVAL_MS         600000   // 10 min (free tier / heap)
+#define EXTERNAL_DESC_MAX       48
+#define OWM_TASK_INTERVAL_MS    5000     // poll interno; fetch real cada OWM_INTERVAL_MS
 
 // --- Intervalos de tareas (ms) ---
 #define AHT_INTERVAL_MS         2000

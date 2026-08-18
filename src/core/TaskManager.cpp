@@ -8,6 +8,7 @@
 #include "../network/OTAManager.h"
 #include "../network/SerialDiagnostics.h"
 #include "../network/NtpTime.h"
+#include "../network/ExternalWeather.h"
 #include "HistoryBuffer.h"
 #include "../display/oled/OLEDDisplayModule.h"
 #include <TaskScheduler.h>
@@ -29,6 +30,7 @@ static void taskSerialCallback();
 static void taskSystemCallback();
 static void taskNtpCallback();
 static void taskHistoryCallback();
+static void taskExternalWeatherCallback();
 
 static Task taskAHT(AHT_INTERVAL_MS, TASK_FOREVER, &taskAHTCallback);
 static Task taskBMP(BMP180_INTERVAL_MS, TASK_FOREVER, &taskBMPCallback);
@@ -40,6 +42,7 @@ static Task taskSerial(SERIAL_INTERVAL_MS, TASK_FOREVER, &taskSerialCallback);
 static Task taskSystem(SYSTEM_INTERVAL_MS, TASK_FOREVER, &taskSystemCallback);
 static Task taskNtp(NTP_TASK_INTERVAL_MS, TASK_FOREVER, &taskNtpCallback);
 static Task taskHistory(HISTORY_INTERVAL_MS, TASK_FOREVER, &taskHistoryCallback);
+static Task taskExternalWeather(OWM_TASK_INTERVAL_MS, TASK_FOREVER, &taskExternalWeatherCallback);
 
 void TaskManager::begin() {
   bootMillis = millis();
@@ -51,6 +54,7 @@ void TaskManager::begin() {
 
   OLEDDisplayModule::showBootMessage("Estacion Meteo", FIRMWARE_VERSION);
   stationWiFi.begin();
+  ExternalWeather::begin();
 
   scheduler.addTask(taskAHT);
   scheduler.addTask(taskBMP);
@@ -62,6 +66,7 @@ void TaskManager::begin() {
   scheduler.addTask(taskSystem);
   scheduler.addTask(taskNtp);
   scheduler.addTask(taskHistory);
+  scheduler.addTask(taskExternalWeather);
 
   taskAHT.enable();
   taskBMP.enable();
@@ -73,6 +78,7 @@ void TaskManager::begin() {
   taskSystem.enable();
   taskNtp.enable();
   taskHistory.enable();
+  taskExternalWeather.enable();
 
   SerialDiagnostics::printBootBanner();
 }
@@ -122,4 +128,8 @@ static void taskNtpCallback() {
 
 static void taskHistoryCallback() {
   HistoryBuffer::pushFromWeatherData();
+}
+
+static void taskExternalWeatherCallback() {
+  ExternalWeather::update();
 }

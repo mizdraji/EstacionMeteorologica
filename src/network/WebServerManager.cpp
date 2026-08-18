@@ -16,6 +16,23 @@ static String jsonFloatOrNull(float value) {
   return String(value, 1);
 }
 
+static String jsonEscape(const char* text) {
+  String out;
+  if (!text) {
+    return out;
+  }
+  for (const char* p = text; *p; ++p) {
+    if (*p == '"' || *p == '\\') {
+      out += '\\';
+    }
+    if (static_cast<unsigned char>(*p) < 0x20) {
+      continue;
+    }
+    out += *p;
+  }
+  return out;
+}
+
 static void handleApiData() {
   const WeatherData& data = WeatherData::instance();
   String json = "{";
@@ -26,7 +43,17 @@ static void handleApiData() {
   json += "\"pressure\":" + jsonFloatOrNull(data.pressure) + ",";
   json += "\"altitude\":" + jsonFloatOrNull(data.altitude) + ",";
   json += "\"bmp180_ok\":" + String(data.bmp180OK ? "true" : "false") + ",";
-  json += "\"aht10_ok\":" + String(data.aht10OK ? "true" : "false");
+  json += "\"aht10_ok\":" + String(data.aht10OK ? "true" : "false") + ",";
+  json += "\"external_temperature\":" + jsonFloatOrNull(data.externalTemperature) + ",";
+  json += "\"external_humidity\":" + jsonFloatOrNull(data.externalHumidity) + ",";
+  json += "\"external_description\":\"" + jsonEscape(data.externalDescription) + "\",";
+  json += "\"external_ok\":" + String(data.externalOK ? "true" : "false") + ",";
+  json += "\"external_age_s\":";
+  if (data.externalLastUpdateMs == 0) {
+    json += "null";
+  } else {
+    json += String((millis() - data.externalLastUpdateMs) / 1000UL);
+  }
   json += "}";
 
   server.send(200, "application/json", json);

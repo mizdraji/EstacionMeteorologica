@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
+#include "../Config.h"
 
 struct WeatherData {
   float temperatureBMP;
@@ -27,6 +28,13 @@ struct WeatherData {
   uint8_t otaProgress;
 
   uint32_t freeHeap;
+
+  // Referencia OpenWeatherMap (current weather)
+  float externalTemperature;
+  float externalHumidity;
+  char externalDescription[EXTERNAL_DESC_MAX];
+  bool externalOK;
+  unsigned long externalLastUpdateMs;
 
   void init();
   void updateDerivedValues();

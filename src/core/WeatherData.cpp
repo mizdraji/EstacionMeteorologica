@@ -21,7 +21,13 @@ WeatherData::WeatherData()
     firmwareVersion(FIRMWARE_VERSION),
     otaInProgress(false),
     otaProgress(0),
-    freeHeap(0) {}
+    freeHeap(0),
+    externalTemperature(WEATHER_VALUE_INVALID),
+    externalHumidity(WEATHER_VALUE_INVALID),
+    externalOK(false),
+    externalLastUpdateMs(0) {
+  externalDescription[0] = '\0';
+}
 
 WeatherData& WeatherData::instance() {
   return _instance;
@@ -43,6 +49,11 @@ void WeatherData::init() {
   wifiRSSI = 0;
   otaInProgress = false;
   otaProgress = 0;
+  externalTemperature = WEATHER_VALUE_INVALID;
+  externalHumidity = WEATHER_VALUE_INVALID;
+  externalDescription[0] = '\0';
+  externalOK = false;
+  externalLastUpdateMs = 0;
   updateDerivedValues();
 }
 
