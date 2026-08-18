@@ -124,13 +124,13 @@ async function refreshData() {
 
     setText("temp-main", formatValue(data.temperature_main, " °C"));
     setText("temp-bmp", formatValue(data.temperature_bmp, " °C"));
-    setText("temp-dht", formatValue(data.temperature_dht, " °C"));
+    setText("temp-aht", formatValue(data.temperature_aht, " °C"));
     setText("humidity", formatValue(data.humidity, " %"));
     setText("pressure", formatValue(data.pressure, " hPa"));
     setText("altitude", formatValue(data.altitude, " m"));
 
     setText("sensor-bmp", `BMP180: ${data.bmp180_ok ? "OK" : "ERROR"}`);
-    setText("sensor-dht", `DHT11: ${data.dht11_ok ? "OK" : "ERROR"}`);
+    setText("sensor-aht", `AHT10: ${data.aht10_ok ? "OK" : "ERROR"}`);
 
     setText("wifi", `Wi-Fi: ${status.wifi_connected ? "Conectado" : "Desconectado"}`);
     setText("rssi", `RSSI: ${status.rssi} dBm`);

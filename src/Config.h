@@ -4,7 +4,7 @@
 // Estación Meteorológica Local - Configuración centralizada
 // ============================================================
 
-#define FIRMWARE_VERSION "1.3.0"
+#define FIRMWARE_VERSION "1.4.0"
 
 // Credenciales locales (OTA). WiFi se configura con WiFiManager (portal AP).
 // Ver secrets.h.example. secrets.h no se versiona.
@@ -29,8 +29,8 @@
 #define OLED_SCL_PIN    14  // D5
 #define OLED_I2C_ADDRESS 0x3C
 
-// --- DHT11 (tutorial WeatherInstrument: D7) ---
-#define DHT11_PIN       13  // D7
+// --- AHT10 (mismo bus I2C que BMP180: D2/D1) ---
+#define AHT10_I2C_ADDR  0x38
 
 // --- MAX7219 8 digitos (DIN / CLK / CS) ---
 #define MAX7219_DIN_PIN  15  // D8
@@ -49,7 +49,7 @@
 #define SEA_LEVEL_PRESSURE_HPA  1013.25f
 
 // --- Intervalos de tareas (ms) ---
-#define DHT_INTERVAL_MS         2000
+#define AHT_INTERVAL_MS         2000
 #define BMP180_INTERVAL_MS      1000
 #define DISPLAY_INTERVAL_MS     100
 #define WIFI_INTERVAL_MS        5000

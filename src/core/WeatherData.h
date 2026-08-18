@@ -5,14 +5,14 @@
 
 struct WeatherData {
   float temperatureBMP;
-  float temperatureDHT;
+  float temperatureAHT;
   float temperatureMain;
   float humidity;
   float pressure;
   float altitude;
 
   bool bmp180OK;
-  bool dht11OK;
+  bool aht10OK;
   bool max7219OK;
   bool oledOK;
   bool ntpSynced;

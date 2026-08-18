@@ -19,7 +19,7 @@ static StationWiFi stationWiFi;
 
 static unsigned long bootMillis = 0;
 
-static void taskDHTCallback();
+static void taskAHTCallback();
 static void taskBMPCallback();
 static void taskDisplayCallback();
 static void taskWiFiCallback();
@@ -30,7 +30,7 @@ static void taskSystemCallback();
 static void taskNtpCallback();
 static void taskHistoryCallback();
 
-static Task taskDHT(DHT_INTERVAL_MS, TASK_FOREVER, &taskDHTCallback);
+static Task taskAHT(AHT_INTERVAL_MS, TASK_FOREVER, &taskAHTCallback);
 static Task taskBMP(BMP180_INTERVAL_MS, TASK_FOREVER, &taskBMPCallback);
 static Task taskDisplay(DISPLAY_INTERVAL_MS, TASK_FOREVER, &taskDisplayCallback);
 static Task taskWiFi(WIFI_INTERVAL_MS, TASK_FOREVER, &taskWiFiCallback);
@@ -52,7 +52,7 @@ void TaskManager::begin() {
   OLEDDisplayModule::showBootMessage("Estacion Meteo", FIRMWARE_VERSION);
   stationWiFi.begin();
 
-  scheduler.addTask(taskDHT);
+  scheduler.addTask(taskAHT);
   scheduler.addTask(taskBMP);
   scheduler.addTask(taskDisplay);
   scheduler.addTask(taskWiFi);
@@ -63,7 +63,7 @@ void TaskManager::begin() {
   scheduler.addTask(taskNtp);
   scheduler.addTask(taskHistory);
 
-  taskDHT.enable();
+  taskAHT.enable();
   taskBMP.enable();
   taskDisplay.enable();
   taskWiFi.enable();
@@ -81,8 +81,8 @@ void TaskManager::run() {
   scheduler.execute();
 }
 
-static void taskDHTCallback() {
-  sensorManager.readDHT11();
+static void taskAHTCallback() {
+  sensorManager.readAHT10();
 }
 
 static void taskBMPCallback() {

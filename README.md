@@ -1,6 +1,6 @@
 # Estación Meteorológica Local (ESP8266)
 
-Firmware modular para medición local con BMP180, DHT11, MAX7219 (hora NTP) y OLED de diagnóstico.
+Firmware modular para medición local con BMP180, AHT10, MAX7219 (hora NTP) y OLED de diagnóstico.
 
 Proyecto gestionado con **PlatformIO** (placa NodeMCU 1.0).
 

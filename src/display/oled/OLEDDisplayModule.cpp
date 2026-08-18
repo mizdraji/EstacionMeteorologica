@@ -65,7 +65,7 @@ void OLEDDisplayModule::showDiagnostics(const WeatherData& data) {
   char line[32];
   display.drawString(0, 0, String("FW ") + data.firmwareVersion);
 
-  snprintf(line, sizeof(line), "BMP:%s DHT:%s", data.bmp180OK ? "OK" : "ERR", data.dht11OK ? "OK" : "ERR");
+  snprintf(line, sizeof(line), "BMP:%s AHT:%s", data.bmp180OK ? "OK" : "ERR", data.aht10OK ? "OK" : "ERR");
   display.drawString(0, 12, line);
 
   if (data.wifiConnected) {

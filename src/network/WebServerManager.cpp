@@ -20,13 +20,13 @@ static void handleApiData() {
   const WeatherData& data = WeatherData::instance();
   String json = "{";
   json += "\"temperature_bmp\":" + jsonFloatOrNull(data.temperatureBMP) + ",";
-  json += "\"temperature_dht\":" + jsonFloatOrNull(data.temperatureDHT) + ",";
+  json += "\"temperature_aht\":" + jsonFloatOrNull(data.temperatureAHT) + ",";
   json += "\"temperature_main\":" + jsonFloatOrNull(data.temperatureMain) + ",";
   json += "\"humidity\":" + jsonFloatOrNull(data.humidity) + ",";
   json += "\"pressure\":" + jsonFloatOrNull(data.pressure) + ",";
   json += "\"altitude\":" + jsonFloatOrNull(data.altitude) + ",";
   json += "\"bmp180_ok\":" + String(data.bmp180OK ? "true" : "false") + ",";
-  json += "\"dht11_ok\":" + String(data.dht11OK ? "true" : "false");
+  json += "\"aht10_ok\":" + String(data.aht10OK ? "true" : "false");
   json += "}";
 
   server.send(200, "application/json", json);
@@ -46,7 +46,7 @@ static void handleApiStatus() {
   json += "\"firmware\":\"" + String(FIRMWARE_VERSION) + "\",";
   json += "\"free_heap\":" + String(data.freeHeap) + ",";
   json += "\"bmp180_ok\":" + String(data.bmp180OK ? "true" : "false") + ",";
-  json += "\"dht11_ok\":" + String(data.dht11OK ? "true" : "false") + ",";
+  json += "\"aht10_ok\":" + String(data.aht10OK ? "true" : "false") + ",";
   json += "\"max7219_ok\":" + String(data.max7219OK ? "true" : "false") + ",";
   json += "\"ntp_synced\":" + String(data.ntpSynced ? "true" : "false") + ",";
   json += "\"time\":\"" + String(timeBuf) + "\",";
