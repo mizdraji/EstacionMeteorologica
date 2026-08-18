@@ -12,8 +12,6 @@ WeatherData::WeatherData()
     altitude(WEATHER_VALUE_INVALID),
     bmp180OK(false),
     aht10OK(false),
-    max7219OK(false),
-    oledOK(false),
     ntpSynced(false),
     wifiConnected(false),
     wifiRSSI(0),
@@ -42,8 +40,6 @@ void WeatherData::init() {
   altitude = WEATHER_VALUE_INVALID;
   bmp180OK = false;
   aht10OK = false;
-  max7219OK = false;
-  oledOK = false;
   ntpSynced = false;
   wifiConnected = false;
   wifiRSSI = 0;

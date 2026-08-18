@@ -1,8 +1,8 @@
 # Estación Meteorológica Local (ESP8266)
 
-Firmware modular para medición local con BMP180, AHT10, MAX7219 (hora NTP) y OLED de diagnóstico. Compara lecturas locales con el clima del día vía OpenWeatherMap (consulta desde el ESP).
+Firmware modular para estación **exterior** en NodeMCU ESP8266 (sin OLED ni display 7 segmentos): BMP180 + AHT10, web local, WiFiManager, OTA, NTP y comparación con OpenWeatherMap.
 
-Proyecto gestionado con **PlatformIO** (placa NodeMCU 1.0).
+Proyecto gestionado con **PlatformIO** (placa NodeMCU 1.0). Pinout: [docs/pinout.md](docs/pinout.md).
 
 ## Documentación
 

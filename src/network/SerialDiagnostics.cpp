@@ -16,10 +16,6 @@ void SerialDiagnostics::printBootBanner() {
   Serial.println(data.bmp180OK ? F("OK") : F("FAIL"));
   Serial.print(F("AHT10: "));
   Serial.println(data.aht10OK ? F("OK") : F("FAIL"));
-  Serial.print(F("MAX7219: "));
-  Serial.println(data.max7219OK ? F("OK") : F("FAIL"));
-  Serial.print(F("OLED: "));
-  Serial.println(data.oledOK ? F("OK") : F("FAIL"));
   Serial.println();
   Serial.print(F("Hostname: "));
   Serial.println(HOSTNAME);

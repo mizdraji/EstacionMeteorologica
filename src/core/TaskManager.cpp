@@ -2,7 +2,6 @@
 #include "../Config.h"
 #include "SensorManager.h"
 #include "WeatherData.h"
-#include "../display/DisplayManager.h"
 #include "../network/StationWiFi.h"
 #include "../network/WebServerManager.h"
 #include "../network/OTAManager.h"
@@ -10,19 +9,16 @@
 #include "../network/NtpTime.h"
 #include "../network/ExternalWeather.h"
 #include "HistoryBuffer.h"
-#include "../display/oled/OLEDDisplayModule.h"
 #include <TaskScheduler.h>
 
 static Scheduler scheduler;
 static SensorManager sensorManager;
-static DisplayManager displayManager;
 static StationWiFi stationWiFi;
 
 static unsigned long bootMillis = 0;
 
 static void taskAHTCallback();
 static void taskBMPCallback();
-static void taskDisplayCallback();
 static void taskWiFiCallback();
 static void taskWebCallback();
 static void taskOTACallback();
@@ -34,7 +30,6 @@ static void taskExternalWeatherCallback();
 
 static Task taskAHT(AHT_INTERVAL_MS, TASK_FOREVER, &taskAHTCallback);
 static Task taskBMP(BMP180_INTERVAL_MS, TASK_FOREVER, &taskBMPCallback);
-static Task taskDisplay(DISPLAY_INTERVAL_MS, TASK_FOREVER, &taskDisplayCallback);
 static Task taskWiFi(WIFI_INTERVAL_MS, TASK_FOREVER, &taskWiFiCallback);
 static Task taskWeb(WEB_INTERVAL_MS, TASK_FOREVER, &taskWebCallback);
 static Task taskOTA(OTA_INTERVAL_MS, TASK_FOREVER, &taskOTACallback);
@@ -50,15 +45,12 @@ void TaskManager::begin() {
   WeatherData::instance().init();
   HistoryBuffer::begin();
   sensorManager.begin();
-  displayManager.begin();
 
-  OLEDDisplayModule::showBootMessage("Estacion Meteo", FIRMWARE_VERSION);
   stationWiFi.begin();
   ExternalWeather::begin();
 
   scheduler.addTask(taskAHT);
   scheduler.addTask(taskBMP);
-  scheduler.addTask(taskDisplay);
   scheduler.addTask(taskWiFi);
   scheduler.addTask(taskWeb);
   scheduler.addTask(taskOTA);
@@ -70,7 +62,6 @@ void TaskManager::begin() {
 
   taskAHT.enable();
   taskBMP.enable();
-  taskDisplay.enable();
   taskWiFi.enable();
   taskWeb.enable();
   taskOTA.enable();
@@ -93,10 +84,6 @@ static void taskAHTCallback() {
 
 static void taskBMPCallback() {
   sensorManager.readBMP180();
-}
-
-static void taskDisplayCallback() {
-  displayManager.update();
 }
 
 static void taskWiFiCallback() {

@@ -74,7 +74,6 @@ static void handleApiStatus() {
   json += "\"free_heap\":" + String(data.freeHeap) + ",";
   json += "\"bmp180_ok\":" + String(data.bmp180OK ? "true" : "false") + ",";
   json += "\"aht10_ok\":" + String(data.aht10OK ? "true" : "false") + ",";
-  json += "\"max7219_ok\":" + String(data.max7219OK ? "true" : "false") + ",";
   json += "\"ntp_synced\":" + String(data.ntpSynced ? "true" : "false") + ",";
   json += "\"time\":\"" + String(timeBuf) + "\",";
   json += "\"epoch\":" + String(NtpTime::isSynced() ? NtpTime::epoch() : 0) + ",";

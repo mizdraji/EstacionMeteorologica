@@ -1,26 +1,33 @@
 # Pinout
 
-Placa ESP8266 + OLED 0.96" integrado (AI-Thinker ESP8266MOD). El OLED interno ya está cableado a **D6 (SDA)** y **D5 (SCL)**.
+Placa **NodeMCU ESP8266** (Amica / v2, sin OLED integrado). Pinout de referencia:
 
-![Pinout ESP8266 OLED](esp8266-oled-pinout.png)
+![Pinout NodeMCU ESP8266](esp8266-nodemcu-pinout.png)
 
 ## Conexiones del proyecto
 
 | Módulo | Señal | Pin placa | GPIO | Notas |
 |--------|-------|-----------|------|-------|
-| OLED (integrado) | SDA | D6 | 12 | Ya soldado en la placa |
-| OLED (integrado) | SCL | D5 | 14 | Ya soldado en la placa |
-| BMP180 | SDA | D2 | 4 | Bus I2C propio |
-| BMP180 | SCL | D1 | 5 | Bus I2C propio |
+| BMP180 | SDA | D2 | 4 | Bus I2C |
+| BMP180 | SCL | D1 | 5 | Bus I2C |
 | BMP180 | VCC / GND | 3V3 / GND | — | |
 | AHT10 | SDA | D2 | 4 | Mismo bus I2C que BMP180 |
 | AHT10 | SCL | D1 | 5 | Mismo bus I2C que BMP180 |
 | AHT10 | VCC / GND | 3V3 / GND | — | Dirección I2C `0x38` |
-| MAX7219 | DIN | D8 | 15 | |
-| MAX7219 | CLK | D4 | 2 | |
-| MAX7219 | CS | D0 | 16 | |
-| MAX7219 | VCC / GND | 5V / GND | — | Preferible 5V en VCC |
 
-**No uses** los pines de la derecha (`CLK`, `SD0`, `CMD`, `SD1`…): son del flash interno.
+### Cableado AHT10 + BMP180 (resumen)
 
-Definiciones en `Config.h` (`BMP180_*`, `OLED_*`, `AHT10_I2C_ADDR`, `MAX7219_*`).
+1. Uní **SDA** de ambos sensores a **D2** (GPIO4).
+2. Uní **SCL** de ambos sensores a **D1** (GPIO5).
+3. Alimentá ambos con **3V3** y **GND** comunes con la placa.
+4. No hace falta niveladores: ambos sensores son 3.3 V.
+
+### Pines libres (expansión exterior)
+
+Disponibles para futuros sensores: **D0, D3, D4, D5, D6, D7, D8** y **A0** (ADC). Evitá usar RX/TX si necesitás el monitor serie.
+
+**No uses** los pines de la izquierda del conector SDIO (`CLK`, `SD0`, `CMD`, `SD1`…): son del flash interno.
+
+Definiciones en `Config.h` (`BMP180_*`, `AHT10_I2C_ADDR`).
+
+Esta versión **no usa** OLED ni display MAX7219; la hora NTP se muestra solo en la web.
