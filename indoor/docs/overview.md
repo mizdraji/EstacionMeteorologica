@@ -17,6 +17,7 @@ outdoor → demo.tbmq.io (topic WeatherStation) → indoor
 |-------|---------|
 | Board | NodeMCU v2 (ESP8266) / ideaspark OLED |
 | WiFi | WiFiManager (portal AP; sin credenciales en secrets) |
+| Runtime | TaskScheduler (WiFi, NTP, MQTT, MAX7219, OLED, LCD) |
 | MQTT | PubSubClient subscribe |
 | JSON | ArduinoJson 6 |
 | Hora | NTPClient, pool South America, UTC-3 |

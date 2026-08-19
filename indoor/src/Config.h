@@ -4,7 +4,7 @@
 // Estación indoor (display) - Configuración centralizada
 // ============================================================
 
-#define FIRMWARE_VERSION "0.1.0"
+#define FIRMWARE_VERSION "0.2.0"
 
 // secrets.h opcional (OTA futuro). WiFi: WiFiManager (portal AP).
 // Ver secrets.h.example. secrets.h no se versiona.
@@ -16,9 +16,9 @@
 #define HOSTNAME "weather-indoor-01"
 #endif
 
-// --- WiFiManager ---
-#define WIFI_CONFIG_PORTAL_TIMEOUT_SEC  180
-#define WIFI_CONNECT_TIMEOUT_SEC        20
+// --- WiFiManager (timeouts cortos: no bloquear boot diagnóstico) ---
+#define WIFI_CONFIG_PORTAL_TIMEOUT_SEC  60
+#define WIFI_CONNECT_TIMEOUT_SEC        15
 #define WIFI_INTERVAL_MS                5000
 
 // --- OLED I2C integrado (ideaspark: SDA=D6, SCL=D5) ---
@@ -37,6 +37,7 @@
 // --- LCD IPS 240×240 ST7789 (SPI bit-bang; pines libres) ---
 // CS del módulo: atar a GND (siempre seleccionado). BLK: atar a 3V3.
 // RST en GPIO0 (D3): dejar HIGH en boot (reset inactivo). Ver docs/pinout.md.
+// Adafruit_ST7789 puede pulsar RST por software en init() — OK tras el boot.
 #define LCD_SCK_PIN       13  // D7
 #define LCD_MOSI_PIN      5   // D1
 #define LCD_DC_PIN        4   // D2
@@ -49,6 +50,7 @@
 #define NTP_SERVER              "3.south-america.pool.ntp.org"
 #define NTP_TIME_OFFSET_SEC     (-3 * 3600)
 #define NTP_UPDATE_INTERVAL_MS  60000
+#define NTP_TASK_INTERVAL_MS    1000
 
 // --- MQTT (mismo broker demo que outdoor) ---
 #define MQTT_HOST               "demo.tbmq.io"
@@ -59,8 +61,9 @@
 #define MQTT_TASK_INTERVAL_MS   50
 #define MQTT_STALE_MS           90000  // sin mensaje → UI “stale”
 
-// --- UI refresh ---
-#define DISPLAY_INTERVAL_MS     250
+// --- Intervalos de tareas (ms) ---
+#define SYSTEM_INTERVAL_MS      1000
+#define CLOCK_INTERVAL_MS       1000
 #define OLED_INTERVAL_MS        1000
 #define LCD_INTERVAL_MS         2000
 

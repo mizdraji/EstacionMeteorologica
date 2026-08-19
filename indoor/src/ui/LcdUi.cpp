@@ -28,6 +28,12 @@ static const uint16_t COL_MUTED = 0x8410;   // gris
 static const uint16_t COL_WARN = 0xF800;    // rojo stale
 
 bool LcdUi::begin() {
+  // GPIO0 (D3) = RST: NO forzar LOW al inicio (strapping / flash mode).
+  // Adafruit_ST7789 hace soft/hard reset por software en init() — eso es OK
+  // porque el chip ya arrancó. Dejar pin en INPUT (pull-up del módulo) antes.
+  pinMode(LCD_RST_PIN, INPUT);
+  delay(2);
+
   // Con CS=-1 el módulo debe tener CS a GND.
   tft.init(LCD_WIDTH, LCD_HEIGHT);
   tft.setRotation(0);

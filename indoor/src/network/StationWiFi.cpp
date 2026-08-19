@@ -5,6 +5,17 @@
 #include <WiFiManager.h>
 
 void StationWiFi::begin() {
+  // Prints antes de autoConnect (puede bloquear hasta timeout del portal).
+  Serial.println(F("[WIFI] Preparando WiFiManager..."));
+  Serial.print(F("[WIFI] Hostname: "));
+  Serial.println(HOSTNAME);
+  Serial.print(F("[WIFI] Connect timeout "));
+  Serial.print(WIFI_CONNECT_TIMEOUT_SEC);
+  Serial.print(F(" s, portal timeout "));
+  Serial.print(WIFI_CONFIG_PORTAL_TIMEOUT_SEC);
+  Serial.println(F(" s"));
+  Serial.flush();
+
   WiFi.mode(WIFI_STA);
   WiFi.hostname(HOSTNAME);
 
@@ -17,9 +28,8 @@ void StationWiFi::begin() {
   Serial.println(F("[WIFI] Intentando credenciales guardadas..."));
   Serial.print(F("[WIFI] Si falla, portal AP: "));
   Serial.println(HOSTNAME);
-  Serial.print(F("[WIFI] Abrí http://192.168.4.1 (timeout "));
-  Serial.print(WIFI_CONFIG_PORTAL_TIMEOUT_SEC);
-  Serial.println(F(" s)"));
+  Serial.println(F("[WIFI] Abrí http://192.168.4.1"));
+  Serial.flush();
 
   const bool connected = wm.autoConnect(HOSTNAME);
   if (connected) {

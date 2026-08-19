@@ -18,6 +18,11 @@ Placa base: **ideaspark / NodeMCU** con OLED I2C integrado. Pines en `src/Config
 | CLK | 2 | D4 |
 | CS | 16 | D0 |
 
+**Boot / strapping:** GPIO15 debe estar **LOW** y GPIO2 **HIGH** al reset.
+El firmware pone esos niveles *antes* de hablar con el MAX7219 y deja CLK en HIGH
+tras cada `shiftOut` (que lo deja LOW). Si hay boot loop (`ets Jan 8 2013` a 74880),
+desconectá DIN/CLK o usá `pio run -e indoor_minimal`.
+
 ## LCD IPS 240×240 ST7789 (SPI bit-bang)
 
 Elegido para **no chocar** con OLED (D5/D6) ni MAX7219 (D0/D4/D8).
@@ -38,7 +43,7 @@ Elegido para **no chocar** con OLED (D5/D6) ni MAX7219 (D0/D4/D8).
 - D5/D6 ocupados por OLED → no se puede usar SPI “estándar” del NodeMCU en esos pines.
 - D0/D4/D8 = MAX7219.
 - Libres útiles: D1, D2, D3, D7.
-- **D3 = GPIO0**: pin de boot. El LCD RST inactivo es HIGH; el módulo normalmente tiene pull-up. **No** forzar RST a LOW en el encendido.
+- **D3 = GPIO0**: pin de boot. El LCD RST inactivo es HIGH; el módulo normalmente tiene pull-up. **No** forzar RST a LOW en el encendido. `Adafruit_ST7789::init()` puede pulsar RST por software *después* del boot — eso es OK.
 - BLK y CS no usan GPIO extras: ahorran pines y evitan conflictos.
 
 ### Pines libres restantes

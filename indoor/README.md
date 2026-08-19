@@ -21,16 +21,18 @@ OLED: D6/D5. MAX7219: D8/D4/D0.
 
 1. Abrí la carpeta `indoor/` como proyecto PlatformIO (o desde la raíz del monorepo).
 2. (Opcional) Copiá `src/secrets.h.example` → `src/secrets.h` solo si querés overrides; **no** hace falta para WiFi.
-3. Compilar y subir:
+3. Tras boot loop o cambio de `flash_mode` (DOUT), borrá flash y subí:
 
 ```powershell
 cd indoor
 pio run
+pio run -t erase
 pio run -t upload
-pio device monitor
+pio device monitor -b 115200
 ```
 
-4. Primera vez WiFi: el ESP abre AP `weather-indoor-01` → http://192.168.4.1 (timeout 180 s).
+4. Primera vez WiFi: el ESP abre AP `weather-indoor-01` → http://192.168.4.1 (timeout portal en `Config.h`).
+5. Diagnóstico sin displays: `pio run -e indoor_minimal -t upload` (solo Serial + pines boot-safe).
 
 ## Qué se ve en cada pantalla
 

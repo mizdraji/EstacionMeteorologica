@@ -6,12 +6,15 @@ bool Max7219Display::begin(uint8_t dinPin, uint8_t clkPin, uint8_t csPin) {
   _clk = clkPin;
   _cs = csPin;
 
+  // ESP8266 strapping: GPIO15 (D8) debe quedar LOW, GPIO2 (D4) HIGH
+  // antes de cualquier tráfico SPI hacia el MAX7219.
   pinMode(_din, OUTPUT);
   pinMode(_clk, OUTPUT);
   pinMode(_cs, OUTPUT);
+  digitalWrite(_din, LOW);   // GPIO15 boot-safe
+  digitalWrite(_clk, HIGH);  // GPIO2 boot-safe (no dejar LOW)
   digitalWrite(_cs, HIGH);
-  digitalWrite(_clk, LOW);
-  digitalWrite(_din, LOW);
+  delay(1);
 
   send(0x0F, 0x00);  // display test off
   send(0x0C, 0x01);  // normal operation
@@ -19,6 +22,10 @@ bool Max7219Display::begin(uint8_t dinPin, uint8_t clkPin, uint8_t csPin) {
   send(0x09, 0xFF);  // BCD decode for all digits
   setIntensity(2);
   clear();
+
+  // Tras hablar con el chip, restaurar strapping por si hay WDT/reset
+  digitalWrite(_din, LOW);
+  digitalWrite(_clk, HIGH);
   return true;
 }
 
@@ -27,6 +34,10 @@ void Max7219Display::send(uint8_t address, uint8_t data) {
   shiftOut(_din, _clk, MSBFIRST, address);
   shiftOut(_din, _clk, MSBFIRST, data);
   digitalWrite(_cs, HIGH);
+  // shiftOut deja CLK LOW; GPIO2 debe volver a HIGH (strapping)
+  if (_clk == 2) {
+    digitalWrite(_clk, HIGH);
+  }
 }
 
 void Max7219Display::setDigitRaw(uint8_t digit, uint8_t value) {
