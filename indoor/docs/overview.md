@@ -1,24 +1,30 @@
 # Indoor — overview
 
-El nodo interior **no** mide el clima exterior. Consume lo que publica el outdoor y lo muestra cerca del usuario.
+El nodo interior **no** mide sensores de clima. Consume el JSON que publica **outdoor** por MQTT y lo muestra cerca del usuario en tres displays.
 
-## Objetivos (plan)
+## Flujo
 
-1. Conectarse al mismo broker MQTT que usa outdoor.
-2. Suscribirse al topic de telemetría (p. ej. `WeatherStation`; ver `outdoor/docs/mqtt.md`).
-3. Parsear el JSON (temp, humedad, presión, estado de sensores, etc.).
-4. Visualizar en display local (LCD/OLED u otro — por definir) y/o UI auxiliar.
+```
+outdoor → demo.tbmq.io (topic WeatherStation) → indoor
+                                                      ├─ MAX7219  hora (NTP)
+                                                      ├─ OLED     diagnóstico
+                                                      └─ LCD      UI principal
+```
 
-## Fuera de alcance por ahora
+## Stack
 
-- Firmware completo de display
-- Elección definitiva de placa (ESP32 vs otra)
-- Credenciales / `secrets.h` reales
+| Pieza | Detalle |
+|-------|---------|
+| Board | NodeMCU v2 (ESP8266) / ideaspark OLED |
+| WiFi | WiFiManager (portal AP; sin credenciales en secrets) |
+| MQTT | PubSubClient subscribe |
+| JSON | ArduinoJson 6 |
+| Hora | NTPClient, pool South America, UTC-3 |
+| OLED | Adafruit SSD1306 (I2C D6/D5) |
+| Reloj | Max7219Display (bit-bang, mismo driver que outdoor antiguo) |
+| LCD | Adafruit ST7789 + GFX (soft SPI) |
 
 ## Relación con outdoor
 
-```
-outdoor → MQTT broker → indoor (esta carpeta)
-```
-
-Arquitectura del monorepo: [`../../docs/architecture.md`](../../docs/architecture.md).
+Arquitectura del monorepo: [`../../docs/architecture.md`](../../docs/architecture.md).  
+Payload de referencia: [`../../outdoor/docs/mqtt.md`](../../outdoor/docs/mqtt.md).
