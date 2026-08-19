@@ -1,6 +1,6 @@
 # MQTT (publicación telemetría)
 
-El firmware publica un JSON compacto al broker **demo público** de ThingsBoard MQTT (`demo.tbmq.io`). No es un broker de producción: cualquiera puede suscribirse al topic.
+El firmware **outdoor** publica un JSON compacto al broker **demo público** de ThingsBoard MQTT (`demo.tbmq.io`). No es un broker de producción: cualquiera puede suscribirse al topic. El nodo [`indoor/`](../../indoor/) (WIP) se suscribirá a este mismo flujo; ver [arquitectura](../../docs/architecture.md).
 
 ## Parámetros (`src/Config.h`)
 

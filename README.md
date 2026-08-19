@@ -1,65 +1,37 @@
-# Estación Meteorológica Local (ESP8266)
+# Estación Meteorológica (monorepo)
 
-Firmware modular para estación **exterior** en NodeMCU ESP8266 (sin OLED ni display 7 segmentos): BMP180 + AHT10, web local, WiFiManager, OTA, NTP, comparación con OpenWeatherMap y publicación MQTT.
+Dos firmwares en un solo repositorio:
 
-Proyecto gestionado con **PlatformIO** (placa NodeMCU 1.0). Pinout: [docs/pinout.md](docs/pinout.md).
+| Carpeta | Rol |
+|---------|-----|
+| [`outdoor/`](outdoor/) | Nodo **exterior**: sensores (AHT10 + BMP180), web local, OTA, MQTT |
+| [`indoor/`](indoor/) | Nodo **interior**: visualización (WIP) — consume datos vía MQTT |
 
-## Documentación
+## Flujo de datos (alto nivel)
 
-| Tema | Archivo |
-|------|---------|
-| PlatformIO (build / upload / FS) | [docs/platformio.md](docs/platformio.md) |
-| WiFi (portal WiFiManager) | [docs/wifi-manager.md](docs/wifi-manager.md) |
-| LittleFS (UI web) | [docs/littlefs.md](docs/littlefs.md) |
-| OpenWeatherMap (clima externo) | [docs/openweathermap.md](docs/openweathermap.md) |
-| MQTT (telemetría) | [docs/mqtt.md](docs/mqtt.md) |
-| Pinout y conexiones | [docs/pinout.md](docs/pinout.md) |
-
-## Librerías
-
-Declaradas en `platformio.ini` (`lib_deps`); PlatformIO las instala solo:
-
-- TaskScheduler (arkhipenko)
-- NTPClient (Fabrice Weinberg / arduino-libraries)
-- WiFiManager (tzapu) — detalle en [docs/wifi-manager.md](docs/wifi-manager.md)
-- ArduinoJson (bblanchon) — parse de OpenWeatherMap y payload MQTT
-- PubSubClient (knolleary) — publicación MQTT; ver [docs/mqtt.md](docs/mqtt.md)
-
-## Configuración rápida
-
-1. Copiá `src/secrets.h.example` → `src/secrets.h`
-2. Completá `OTA_PASSWORD` y `OPENWEATHERMAP_API_KEY` (WiFi **no** va en secrets; ver [docs/wifi-manager.md](docs/wifi-manager.md))
-3. Ajustá GPIO, NTP, hostname, ubicación OWM (`OWM_CITY_ID` / lat-lon) e intervalos en `src/Config.h`
-
-`src/secrets.h` no se versiona (`.gitignore`).
-
-## Compilar y subir (PlatformIO)
-
-Desde la raíz del repo:
-
-```powershell
-pio run                 # compilar
-pio run -t upload       # firmware
-pio run -t uploadfs     # carpeta data/ → LittleFS
-pio device monitor      # serial 115200
+```
+[outdoor]  --publica JSON-->  [broker MQTT]  --suscribe-->  [indoor]
+                                 topic p.ej. WeatherStation
 ```
 
-Tras cambios en `data/` **y** firmware: hace falta `upload` + `uploadfs`.
+El exterior mide y publica telemetría. El interior (en desarrollo) se suscribe al mismo broker/topic y muestra los datos en display o UI local. Detalle compartido: [`docs/architecture.md`](docs/architecture.md).
 
-UI (hormiga → PROJECT TASKS), Erase Flash y prueba limpia: [docs/platformio.md](docs/platformio.md). LittleFS: [docs/littlefs.md](docs/littlefs.md).
+## Empezar
 
-## Acceso
+- **Exterior (listo para build):** abrí la carpeta `outdoor/` como proyecto PlatformIO, o desde la raíz:
 
-- `http://<IP>/`
-- `http://weather-station-01.local`
-- API: `/api/data` (incluye campos `external_*`), `/api/status`, `/api/history`
+  ```powershell
+  cd outdoor
+  pio run
+  ```
 
-Historial: ring buffer en RAM (`HISTORY_CAPACITY` × `HISTORY_INTERVAL_MS`); se pierde al reiniciar. La web dibuja temp/humedad/presión en canvas (sin CDN) y una tarjeta de comparación local vs OpenWeatherMap.
+  Guía completa: [`outdoor/README.md`](outdoor/README.md).
 
-## OTA
+- **Interior (scaffold):** [`indoor/README.md`](indoor/README.md) — stub Serial, board aún por definir.
 
-Host `weather-station-01`, contraseña en `OTA_PASSWORD` (`src/secrets.h`).
+## Secrets
 
-## Serial
+No versionar credenciales reales. Plantillas:
 
-115200 baud.
+- `outdoor/src/secrets.h.example` → copiar a `outdoor/src/secrets.h`
+- (opcional) `indoor/src/secrets.h.example` cuando el indoor necesite claves

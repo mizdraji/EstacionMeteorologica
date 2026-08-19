@@ -1,12 +1,21 @@
-# Credenciales locales (no versionar)
-secrets.h
-src/secrets.h
+# secrets.h
+**/secrets.h
+**/src/secrets.h
 
-# Artefactos de build / IDE
+# PlatformIO / build
 .pio/
+**/.pio/
 build/
 *.hex
 *.elf
 *.bin
+
+# IDE
 .vscode/
 .idea/
+*.code-workspace
+
+# OS / misc
+Thumbs.db
+Desktop.ini
+.DS_Store

@@ -4,7 +4,7 @@ Sistema de archivos en flash del ESP8266. En este proyecto guarda la **UI web** 
 
 ## Rol en el proyecto
 
-- Carpeta del repo: `data/` (raíz PlatformIO) → se sube a la partición LittleFS del ESP.
+- Carpeta del proyecto: `outdoor/data/` (raíz PlatformIO = `outdoor/`) → se sube a la partición LittleFS del ESP.
 - Código: `src/network/WebServerManager.cpp` monta LittleFS y sirve esos archivos en el puerto 80.
 - **No** se usa para credenciales WiFi (eso es WiFiManager / flash del SDK; ver [wifi-manager.md](wifi-manager.md)).
 

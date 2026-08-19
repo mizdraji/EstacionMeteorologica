@@ -11,11 +11,13 @@ Este proyecto se construye con [PlatformIO](https://platformio.org/) (framework 
 
 | Ruta | Rol |
 |------|-----|
-| `platformio.ini` | Entorno `nodemcuv2`, LittleFS, dependencias |
-| `src/` | Firmware (`main.cpp` + módulos) |
-| `src/secrets.h.example` | Plantilla → copiar a `src/secrets.h` |
-| `data/` | UI web subida a LittleFS |
-| `docs/` | Documentación |
+| `outdoor/platformio.ini` | Entorno `nodemcuv2`, LittleFS, dependencias |
+| `outdoor/src/` | Firmware (`main.cpp` + módulos) |
+| `outdoor/src/secrets.h.example` | Plantilla → copiar a `src/secrets.h` |
+| `outdoor/data/` | UI web subida a LittleFS |
+| `outdoor/docs/` | Documentación de este dispositivo |
+
+Todas las rutas relativas (`src/`, `data/`, `platformio.ini`) se resuelven **desde `outdoor/`**.
 
 ## Primera configuración
 
@@ -42,9 +44,10 @@ Cerrá el Monitor antes de Upload / Upload Filesystem Image / Erase Flash; si el
 
 ## Comandos CLI (equivalentes)
 
-Desde la raíz del repo:
+Desde la carpeta **`outdoor/`** (proyecto PlatformIO de este dispositivo):
 
 ```powershell
+cd outdoor              # si estás en la raíz del monorepo
 pio run                 # Build
 pio run -t upload       # Upload firmware
 pio run -t uploadfs     # Upload Filesystem Image (carpeta data/)
