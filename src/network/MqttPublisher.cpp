@@ -4,7 +4,6 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
-#include <math.h>
 
 static WiFiClient wifiClient;
 static PubSubClient mqttClient(wifiClient);
@@ -15,9 +14,14 @@ static unsigned long nextRetryMs = 0;
 static unsigned long backoffMs = 1000;
 static bool loggedDisconnect = false;
 
-static void setJsonFloatOrNull(JsonObject obj, const char* key, float value) {
+// Formatea con N decimales vía serialized() para JSON numérico compacto
+// (asignar float a ArduinoJson suele emitir muchos dígitos y infla el payload MQTT).
+static void setJsonFloatOrNull(JsonObject obj, const char* key, float value,
+                               int decimals) {
   if (weatherValueIsValid(value)) {
-    obj[key] = roundf(value * 10.0f) / 10.0f;
+    char buf[16];
+    dtostrf(value, 1, decimals, buf);
+    obj[key] = serialized(buf);
   } else {
     obj[key] = nullptr;
   }
@@ -60,18 +64,18 @@ static bool publishTelemetry() {
   StaticJsonDocument<384> doc;
   JsonObject root = doc.to<JsonObject>();
 
-  setJsonFloatOrNull(root, "temp_main", data.temperatureMain);
-  setJsonFloatOrNull(root, "temp_aht", data.temperatureAHT);
-  setJsonFloatOrNull(root, "temp_bmp", data.temperatureBMP);
-  setJsonFloatOrNull(root, "humidity", data.humidity);
-  setJsonFloatOrNull(root, "pressure", data.pressure);
-  setJsonFloatOrNull(root, "altitude", data.altitude);
+  setJsonFloatOrNull(root, "temp_main", data.temperatureMain, 2);
+  setJsonFloatOrNull(root, "temp_aht", data.temperatureAHT, 2);
+  setJsonFloatOrNull(root, "temp_bmp", data.temperatureBMP, 2);
+  setJsonFloatOrNull(root, "humidity", data.humidity, 2);
+  setJsonFloatOrNull(root, "pressure", data.pressure, 1);
+  setJsonFloatOrNull(root, "altitude", data.altitude, 1);
 
   root["bmp180_ok"] = data.bmp180OK;
   root["aht10_ok"] = data.aht10OK;
 
-  setJsonFloatOrNull(root, "ext_temp", data.externalTemperature);
-  setJsonFloatOrNull(root, "ext_humidity", data.externalHumidity);
+  setJsonFloatOrNull(root, "ext_temp", data.externalTemperature, 2);
+  setJsonFloatOrNull(root, "ext_humidity", data.externalHumidity, 2);
   root["ext_ok"] = data.externalOK;
   if (data.externalDescription[0] != '\0') {
     root["ext_desc"] = data.externalDescription;

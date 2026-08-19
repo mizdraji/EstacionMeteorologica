@@ -9,11 +9,11 @@
 static ESP8266WebServer server(WEB_SERVER_PORT);
 static bool _webReady = false;
 
-static String jsonFloatOrNull(float value) {
+static String jsonFloatOrNull(float value, int decimals = 2) {
   if (!weatherValueIsValid(value)) {
     return "null";
   }
-  return String(value, 1);
+  return String(value, decimals);
 }
 
 static String jsonEscape(const char* text) {
@@ -36,16 +36,16 @@ static String jsonEscape(const char* text) {
 static void handleApiData() {
   const WeatherData& data = WeatherData::instance();
   String json = "{";
-  json += "\"temperature_bmp\":" + jsonFloatOrNull(data.temperatureBMP) + ",";
-  json += "\"temperature_aht\":" + jsonFloatOrNull(data.temperatureAHT) + ",";
-  json += "\"temperature_main\":" + jsonFloatOrNull(data.temperatureMain) + ",";
-  json += "\"humidity\":" + jsonFloatOrNull(data.humidity) + ",";
-  json += "\"pressure\":" + jsonFloatOrNull(data.pressure) + ",";
-  json += "\"altitude\":" + jsonFloatOrNull(data.altitude) + ",";
+  json += "\"temperature_bmp\":" + jsonFloatOrNull(data.temperatureBMP, 2) + ",";
+  json += "\"temperature_aht\":" + jsonFloatOrNull(data.temperatureAHT, 2) + ",";
+  json += "\"temperature_main\":" + jsonFloatOrNull(data.temperatureMain, 2) + ",";
+  json += "\"humidity\":" + jsonFloatOrNull(data.humidity, 2) + ",";
+  json += "\"pressure\":" + jsonFloatOrNull(data.pressure, 1) + ",";
+  json += "\"altitude\":" + jsonFloatOrNull(data.altitude, 1) + ",";
   json += "\"bmp180_ok\":" + String(data.bmp180OK ? "true" : "false") + ",";
   json += "\"aht10_ok\":" + String(data.aht10OK ? "true" : "false") + ",";
-  json += "\"external_temperature\":" + jsonFloatOrNull(data.externalTemperature) + ",";
-  json += "\"external_humidity\":" + jsonFloatOrNull(data.externalHumidity) + ",";
+  json += "\"external_temperature\":" + jsonFloatOrNull(data.externalTemperature, 2) + ",";
+  json += "\"external_humidity\":" + jsonFloatOrNull(data.externalHumidity, 2) + ",";
   json += "\"external_description\":\"" + jsonEscape(data.externalDescription) + "\",";
   json += "\"external_ok\":" + String(data.externalOK ? "true" : "false") + ",";
   json += "\"external_age_s\":";
@@ -104,11 +104,11 @@ static void handleApiHistory() {
     json += "{\"t\":";
     json += String(sample.epoch);
     json += ",\"temp\":";
-    json += jsonFloatOrNull(sample.temperature);
+    json += jsonFloatOrNull(sample.temperature, 2);
     json += ",\"hum\":";
-    json += jsonFloatOrNull(sample.humidity);
+    json += jsonFloatOrNull(sample.humidity, 2);
     json += ",\"pres\":";
-    json += jsonFloatOrNull(sample.pressure);
+    json += jsonFloatOrNull(sample.pressure, 1);
     json += "}";
   }
 
