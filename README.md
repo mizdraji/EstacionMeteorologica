@@ -1,6 +1,6 @@
 # Estación Meteorológica Local (ESP8266)
 
-Firmware modular para estación **exterior** en NodeMCU ESP8266 (sin OLED ni display 7 segmentos): BMP180 + AHT10, web local, WiFiManager, OTA, NTP y comparación con OpenWeatherMap.
+Firmware modular para estación **exterior** en NodeMCU ESP8266 (sin OLED ni display 7 segmentos): BMP180 + AHT10, web local, WiFiManager, OTA, NTP, comparación con OpenWeatherMap y publicación MQTT.
 
 Proyecto gestionado con **PlatformIO** (placa NodeMCU 1.0). Pinout: [docs/pinout.md](docs/pinout.md).
 
@@ -12,6 +12,7 @@ Proyecto gestionado con **PlatformIO** (placa NodeMCU 1.0). Pinout: [docs/pinout
 | WiFi (portal WiFiManager) | [docs/wifi-manager.md](docs/wifi-manager.md) |
 | LittleFS (UI web) | [docs/littlefs.md](docs/littlefs.md) |
 | OpenWeatherMap (clima externo) | [docs/openweathermap.md](docs/openweathermap.md) |
+| MQTT (telemetría) | [docs/mqtt.md](docs/mqtt.md) |
 | Pinout y conexiones | [docs/pinout.md](docs/pinout.md) |
 
 ## Librerías
@@ -21,7 +22,8 @@ Declaradas en `platformio.ini` (`lib_deps`); PlatformIO las instala solo:
 - TaskScheduler (arkhipenko)
 - NTPClient (Fabrice Weinberg / arduino-libraries)
 - WiFiManager (tzapu) — detalle en [docs/wifi-manager.md](docs/wifi-manager.md)
-- ArduinoJson (bblanchon) — parse de OpenWeatherMap
+- ArduinoJson (bblanchon) — parse de OpenWeatherMap y payload MQTT
+- PubSubClient (knolleary) — publicación MQTT; ver [docs/mqtt.md](docs/mqtt.md)
 
 ## Configuración rápida
 
