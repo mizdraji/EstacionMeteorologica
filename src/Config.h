@@ -42,8 +42,8 @@
 // 1 = city id; 0 = lat/lon (recomendado; no hace falta city id)
 #define OWM_USE_CITY_ID         0
 #define OWM_CITY_ID             3435217  // solo si OWM_USE_CITY_ID = 1
-#define OWM_LAT                 (-27.45249591953252)
-#define OWM_LON                 (-58.77862759370904)
+#define OWM_LAT                 (-27.47f)
+#define OWM_LON                 (-58.83f)
 #define OWM_INTERVAL_MS         600000   // 10 min (free tier / heap)
 #define EXTERNAL_DESC_MAX       48
 #define OWM_TASK_INTERVAL_MS    5000     // poll interno; fetch real cada OWM_INTERVAL_MS
