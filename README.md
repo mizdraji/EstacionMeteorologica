@@ -4,34 +4,48 @@ Dos firmwares en un solo repositorio:
 
 | Carpeta | Rol |
 |---------|-----|
-| [`outdoor/`](outdoor/) | Nodo **exterior**: sensores (AHT10 + BMP180), web local, OTA, MQTT |
-| [`indoor/`](indoor/) | Nodo **interior**: visualización (WIP) — consume datos vía MQTT |
+| [`outdoor/`](outdoor/) | Nodo **exterior**: sensores (AHT10 + BMP180), web local, OTA, publica MQTT |
+| [`indoor/`](indoor/) | Nodo **interior**: suscribe MQTT y muestra en MAX7219 + OLED + LCD 240×240 |
 
-## Flujo de datos (alto nivel)
+## Flujo de datos
 
 ```
 [outdoor]  --publica JSON-->  [broker MQTT]  --suscribe-->  [indoor]
-                                 topic p.ej. WeatherStation
+              topic WeatherStation              demo.tbmq.io
+                                                    │
+                                    ┌───────────────┼───────────────┐
+                                    ▼               ▼               ▼
+                                 MAX7219          OLED            LCD
+                                 (hora NTP)    (diagnóstico)   (UI clima)
 ```
 
-El exterior mide y publica telemetría. El interior (en desarrollo) se suscribe al mismo broker/topic y muestra los datos en display o UI local. Detalle compartido: [`docs/architecture.md`](docs/architecture.md).
+Detalle: [`docs/architecture.md`](docs/architecture.md).
 
 ## Empezar
 
-- **Exterior (listo para build):** abrí la carpeta `outdoor/` como proyecto PlatformIO, o desde la raíz:
+### Exterior
 
-  ```powershell
-  cd outdoor
-  pio run
-  ```
+```powershell
+cd outdoor
+pio run
+pio run -t upload
+```
 
-  Guía completa: [`outdoor/README.md`](outdoor/README.md).
+Guía: [`outdoor/README.md`](outdoor/README.md).
 
-- **Interior (scaffold):** [`indoor/README.md`](indoor/README.md) — stub Serial, board aún por definir.
+### Interior
+
+```powershell
+cd indoor
+pio run
+pio run -t upload
+```
+
+Pinout LCD / flasheo / pantallas: [`indoor/README.md`](indoor/README.md).
 
 ## Secrets
 
 No versionar credenciales reales. Plantillas:
 
-- `outdoor/src/secrets.h.example` → copiar a `outdoor/src/secrets.h`
-- (opcional) `indoor/src/secrets.h.example` cuando el indoor necesite claves
+- `outdoor/src/secrets.h.example` → `outdoor/src/secrets.h` (OTA + OWM)
+- `indoor/src/secrets.h.example` → `indoor/src/secrets.h` (opcional; WiFi vía WiFiManager)
