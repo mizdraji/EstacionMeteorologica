@@ -14,8 +14,6 @@ struct WeatherData {
 
   bool bmp180OK;
   bool aht10OK;
-  bool max7219OK;
-  bool oledOK;
   bool ntpSynced;
 
   bool wifiConnected;

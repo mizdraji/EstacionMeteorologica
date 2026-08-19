@@ -183,7 +183,7 @@ async function refreshData() {
     setText("clock", status.time || "--:--:--");
     setText(
       "clock-sync",
-      status.ntp_synced ? "Sincronizado (mismo origen que el MAX7219)" : "Esperando NTP..."
+      status.ntp_synced ? "Sincronizado (NTP)" : "Esperando NTP..."
     );
 
     setText("status-line", "Datos actualizados");
