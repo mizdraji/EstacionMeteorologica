@@ -22,7 +22,7 @@ Todas las rutas relativas (`src/`, `data/`, `platformio.ini`) se resuelven **des
 ## Primera configuración
 
 1. Copiá `src/secrets.h.example` → `src/secrets.h`
-2. Completá solo `OTA_PASSWORD` (WiFi lo gestiona WiFiManager; ver [wifi-manager.md](wifi-manager.md))
+2. Completá `OTA_PASSWORD`, MQTT (`MQTT_HOST` / `MQTT_USER` / `MQTT_PASSWORD` / `MQTT_TOPIC`) y, si usás clima externo, `OPENWEATHERMAP_API_KEY` (WiFi lo gestiona WiFiManager; ver [wifi-manager.md](wifi-manager.md))
 3. Ajustá pines / NTP / hostname en `src/Config.h` si hace falta
 
 ## UI de PlatformIO (VS Code / Cursor)

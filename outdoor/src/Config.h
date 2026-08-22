@@ -6,7 +6,7 @@
 
 #define FIRMWARE_VERSION "1.6.1"
 
-// Credenciales locales (OTA + OpenWeatherMap). WiFi se configura con WiFiManager (portal AP).
+// Credenciales locales (OTA + OpenWeatherMap + MQTT). WiFi: WiFiManager (portal AP).
 // Ver secrets.h.example. secrets.h no se versiona.
 #include "secrets.h"
 
@@ -48,13 +48,11 @@
 #define EXTERNAL_DESC_MAX       48
 #define OWM_TASK_INTERVAL_MS    5000     // poll interno; fetch real cada OWM_INTERVAL_MS
 
-// --- MQTT (broker demo público ThingsBoard; ver docs/mqtt.md) ---
-// Password vacía "" (string vacío, no nullptr). Credenciales de demo, no secretas.
-#define MQTT_HOST               "demo.tbmq.io"
+// --- MQTT (host / user / password / topic en secrets.h; ver docs/mqtt.md) ---
+#if !defined(MQTT_HOST) || !defined(MQTT_USER) || !defined(MQTT_PASSWORD) || !defined(MQTT_TOPIC)
+#error "Definí MQTT_HOST, MQTT_USER, MQTT_PASSWORD y MQTT_TOPIC en src/secrets.h (copiá secrets.h.example)"
+#endif
 #define MQTT_PORT               1883
-#define MQTT_USER               "demo"
-#define MQTT_PASSWORD           ""
-#define MQTT_TOPIC              "WeatherStation"
 #define MQTT_INTERVAL_MS        30000   // alineado a HISTORY_INTERVAL_MS
 #define MQTT_TASK_INTERVAL_MS   1000    // loop/reconnect no bloqueante
 

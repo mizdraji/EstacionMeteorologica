@@ -6,11 +6,9 @@
 
 #define FIRMWARE_VERSION "0.3.9"
 
-// secrets.h opcional (OTA futuro). WiFi: WiFiManager (portal AP).
-// Ver secrets.h.example. secrets.h no se versiona.
-#if __has_include("secrets.h")
+// Credenciales locales (MQTT; OTA futuro). WiFi: WiFiManager (portal AP).
+// Copiá secrets.h.example → secrets.h. No se versiona.
 #include "secrets.h"
-#endif
 
 #ifndef HOSTNAME
 #define HOSTNAME "weather-indoor-01"
@@ -61,14 +59,13 @@
 #define NTP_UPDATE_INTERVAL_MS  60000
 #define NTP_TASK_INTERVAL_MS    1000
 
-// --- MQTT (mismo broker demo que outdoor) ---
-#define MQTT_HOST               "demo.tbmq.io"
+// --- MQTT (host / user / password / topic en secrets.h; mismo broker que outdoor) ---
+#if !defined(MQTT_HOST) || !defined(MQTT_USER) || !defined(MQTT_PASSWORD) || !defined(MQTT_TOPIC)
+#error "Definí MQTT_HOST, MQTT_USER, MQTT_PASSWORD y MQTT_TOPIC en src/secrets.h (copiá secrets.h.example)"
+#endif
 #define MQTT_PORT               1883
-#define MQTT_USER               "demo"
-#define MQTT_PASSWORD           ""
-#define MQTT_TOPIC              "WeatherStation"
 #define MQTT_TASK_INTERVAL_MS   50
-#define MQTT_STALE_MS           90000  // sin mensaje → UI “stale”
+#define MQTT_STALE_MS           30000  // sin mensaje → LCD muestra "-" (ajustable)
 
 // --- Intervalos de tareas (ms) ---
 #define SYSTEM_INTERVAL_MS      1000

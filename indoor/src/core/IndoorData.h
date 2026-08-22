@@ -33,6 +33,7 @@ struct IndoorData {
   bool max7219OK = false;
   bool lcdOK = false;
 
+  // true si llegó un JSON hace menos de MQTT_STALE_MS; si no, la UI muestra "-".
   bool dataIsFresh() const {
     return mqttHasData && (millis() - lastMqttMs) < MQTT_STALE_MS;
   }

@@ -5,7 +5,7 @@ Firmware **0.3.9**. El nodo interior **no** mide sensores de clima. Consume el J
 ## Flujo
 
 ```
-outdoor → demo.tbmq.io (topic WeatherStation) → indoor
+outdoor → broker MQTT (secrets.h) → indoor
                                                       ├─ MAX7219  hora NTP (UTC-3)
                                                       └─ LCD      5 vistas ~7 s (temp / hum / presión / OWM / sistema)
 ```
@@ -18,7 +18,7 @@ outdoor → demo.tbmq.io (topic WeatherStation) → indoor
 | Diagnóstico | `indoor_lcd_test`, `indoor_max_test` (y `indoor_minimal`) |
 | WiFi | WiFiManager; AP **`weather-indoor-01`** → http://192.168.4.1 |
 | Runtime | TaskScheduler (WiFi, NTP, MQTT, MAX7219, LCD) |
-| MQTT | PubSubClient subscribe, topic `WeatherStation` |
+| MQTT | PubSubClient subscribe; host/user/pass/topic en `src/secrets.h` |
 | JSON | ArduinoJson 6 |
 | Hora | NTPClient, `3.south-america.pool.ntp.org`, UTC-3 |
 | Reloj | Max7219Display + LedControl local (DIN=21 CLK=18 CS=5) |
@@ -40,7 +40,7 @@ Serial periódico (~20 s): `[SYS] uptime=… heap=…` (añade `LOW` bajo el mis
 
 **Heap / estabilidad (rangos, no una medición única):** en ESP32 Arduino el free heap al boot suele ser ~200–280 KB y baja con WiFi/MQTT. Un valor estable por encima de ~100 KB y un uptime que crece indican que el nodo no está en crash loop. Preocupa una caída continua, heap &lt; 48 KB, o `Reset: 4` (`ESP_RST_PANIC`) al boot. Detalle en [`../README.md`](../README.md#estabilidad--heap).
 
-Cabecera: etiqueta Indoor / “Sin MQTT” y reloj `HH:MM` si NTP está sincronizado. Indicadores de vista en el borde inferior.
+Cabecera: etiqueta Indoor / “Sin MQTT” y reloj `HH:MM` si NTP está sincronizado. Si no llega MQTT en `MQTT_STALE_MS` (30 s por defecto), temperatura/humedad/presión/OWM muestran `-` en lugar del último valor. Indicadores de vista en el borde inferior.
 
 ## Relación con outdoor
 

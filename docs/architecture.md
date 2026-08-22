@@ -10,14 +10,14 @@
 ## Flujo MQTT
 
 1. **outdoor** se conecta al WiFi (WiFiManager) y al broker MQTT.
-2. Cada ~`MQTT_INTERVAL_MS` publica un JSON en el topic `WeatherStation`.
-3. **indoor** se suscribe al mismo topic, parsea el JSON (ArduinoJson) y actualiza LCD + MAX7219.
+2. Cada ~`MQTT_INTERVAL_MS` publica un JSON en el topic definido en `secrets.h`.
+3. **indoor** se suscribe al mismo topic, parsea el JSON (ArduinoJson) y actualiza el LCD. Si no llega un mensaje en `MQTT_STALE_MS`, la UI muestra `-` en lugar del último valor.
 4. La **hora** del MAX7219 indoor viene de **NTP** local (UTC-3), no del payload MQTT.
 
-Topic, host y payload: [`outdoor/docs/mqtt.md`](../outdoor/docs/mqtt.md) · [`indoor/docs/mqtt.md`](../indoor/docs/mqtt.md).
+Host, usuario, password y topic MQTT van en `src/secrets.h` de cada nodo. Puerto y payload: [`outdoor/docs/mqtt.md`](../outdoor/docs/mqtt.md) · [`indoor/docs/mqtt.md`](../indoor/docs/mqtt.md).
 
 ```
-outdoor ──publish──► demo.tbmq.io / WeatherStation ──subscribe──► indoor
+outdoor ──publish──► broker MQTT (secrets.h) ──subscribe──► indoor
                                                                     ├ MAX7219
                                                                     └ LCD
 ```

@@ -38,6 +38,15 @@ static const uint16_t COL_MUTED = 0x8410;
 static const uint16_t COL_WARN = 0xF800;
 static const uint16_t COL_DOT = 0x4A49;
 
+static void formatLiveValue(char* buf, size_t n, const IndoorData& data, float value,
+                            const char* fmt) {
+  if (data.dataIsFresh() && weatherValueIsValid(value)) {
+    snprintf(buf, n, fmt, value);
+  } else {
+    snprintf(buf, n, "-");
+  }
+}
+
 static uint16_t accentForView(uint8_t view) {
   switch (view) {
     case 0:
@@ -216,11 +225,7 @@ void LcdUi::drawTempView(const IndoorData& data) {
   tft.setTextSize(5);
   tft.setTextColor(data.dataIsFresh() ? COL_TEMP : COL_WARN);
   tft.setCursor(24, 78);
-  if (weatherValueIsValid(data.temperature)) {
-    snprintf(buf, sizeof(buf), "%.1f", data.temperature);
-  } else {
-    snprintf(buf, sizeof(buf), "--.-");
-  }
+  formatLiveValue(buf, sizeof(buf), data, data.temperature, "%.1f");
   tft.print(buf);
 
   tft.setTextSize(3);
@@ -238,14 +243,11 @@ void LcdUi::drawHumView(const IndoorData& data) {
   tft.print(F("HUMEDAD"));
 
   char buf[16];
+  const bool liveHum = data.dataIsFresh() && weatherValueIsValid(data.humidity);
   tft.setTextSize(5);
-  tft.setTextColor(COL_HUM);
+  tft.setTextColor(data.dataIsFresh() ? COL_HUM : COL_WARN);
   tft.setCursor(24, 78);
-  if (weatherValueIsValid(data.humidity)) {
-    snprintf(buf, sizeof(buf), "%.0f", data.humidity);
-  } else {
-    snprintf(buf, sizeof(buf), "--");
-  }
+  formatLiveValue(buf, sizeof(buf), data, data.humidity, "%.0f");
   tft.print(buf);
 
   tft.setTextSize(3);
@@ -256,7 +258,7 @@ void LcdUi::drawHumView(const IndoorData& data) {
   const int16_t barY = 188;
   const int16_t barW = 192;
   tft.drawRoundRect(barX, barY, barW, 12, 3, COL_MUTED);
-  if (weatherValueIsValid(data.humidity)) {
+  if (liveHum) {
     float h = data.humidity;
     if (h < 0) {
       h = 0;
@@ -281,13 +283,9 @@ void LcdUi::drawPressView(const IndoorData& data) {
 
   char buf[16];
   tft.setTextSize(4);
-  tft.setTextColor(COL_PRESS);
+  tft.setTextColor(data.dataIsFresh() ? COL_PRESS : COL_WARN);
   tft.setCursor(24, 88);
-  if (weatherValueIsValid(data.pressure)) {
-    snprintf(buf, sizeof(buf), "%.1f", data.pressure);
-  } else {
-    snprintf(buf, sizeof(buf), "--.-");
-  }
+  formatLiveValue(buf, sizeof(buf), data, data.pressure, "%.1f");
   tft.print(buf);
 
   tft.setTextSize(2);
@@ -303,22 +301,28 @@ void LcdUi::drawOwmView(const IndoorData& data) {
 
   const bool hasOwm = data.extOK && data.extDesc[0] != '\0';
   if (hasOwm) {
+    const bool live = data.dataIsFresh();
     tft.print(F("CONDICION OWM"));
     tft.setTextWrap(true);
     tft.setTextSize(2);
-    tft.setTextColor(COL_TEXT);
+    tft.setTextColor(live ? COL_TEXT : COL_WARN);
     tft.setCursor(24, 70);
-    tft.print(data.extDesc);
+    tft.print(live ? data.extDesc : "-");
     tft.setTextWrap(false);
-    if (weatherValueIsValid(data.extTemp)) {
+    if (live && weatherValueIsValid(data.extTemp)) {
       char buf[20];
       snprintf(buf, sizeof(buf), "Ext %.0f C", data.extTemp);
       tft.setTextSize(2);
       tft.setTextColor(COL_OWM);
       tft.setCursor(24, 150);
       tft.print(buf);
+    } else if (!live) {
+      tft.setTextSize(2);
+      tft.setTextColor(COL_WARN);
+      tft.setCursor(24, 150);
+      tft.print(F("-"));
     }
-    if (weatherValueIsValid(data.extHumidity)) {
+    if (live && weatherValueIsValid(data.extHumidity)) {
       char buf[20];
       snprintf(buf, sizeof(buf), "HR %.0f %%", data.extHumidity);
       tft.setTextSize(1);

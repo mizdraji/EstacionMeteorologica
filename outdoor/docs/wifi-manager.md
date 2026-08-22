@@ -36,7 +36,7 @@ Si el portal expira sin configurar, los sensores siguen activos y `StationWiFi::
 ## Relación con `secrets.h` / OTA
 
 - **WiFi:** no va en `secrets.h`. Lo gestiona WiFiManager.
-- **OTA:** sí. En `src/secrets.h` solo hace falta `OTA_PASSWORD` (plantilla: `src/secrets.h.example`).
+- **OTA:** sí. En `src/secrets.h` van `OTA_PASSWORD` y las credenciales MQTT (`MQTT_HOST` / `MQTT_USER` / `MQTT_PASSWORD` / `MQTT_TOPIC`; plantilla: `src/secrets.h.example`).
 - `src/secrets.h` está en `.gitignore` y no se versiona.
 
 ## Dónde se guardan las credenciales

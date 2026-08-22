@@ -74,6 +74,8 @@ pio device monitor -e ttgo
 
 Primera vez WiFi: AP `weather-indoor-01` → http://192.168.4.1.
 
+MQTT: copiá `src/secrets.h.example` → `src/secrets.h` y completá host, usuario, password y topic (mismos que outdoor). `src/secrets.h` no se versiona.
+
 ## Qué se ve (0.3.9)
 
 | Display | Contenido |
@@ -82,7 +84,7 @@ Primera vez WiFi: AP `weather-indoor-01` → http://192.168.4.1.
 | **MAX7219** | Hora NTP `HH-MM-SS` (pool South America, UTC-3). Hasta sincronizar: dashes. |
 | **Serial** | Cada ~20 s: `[SYS] uptime=… heap=…` (añade `LOW` si el heap está bajo). |
 
-WiFi: portal AP **`weather-indoor-01`** → http://192.168.4.1. MQTT topic `WeatherStation` en `demo.tbmq.io`.
+WiFi: portal AP **`weather-indoor-01`** → http://192.168.4.1. MQTT: host/user/pass/topic en `src/secrets.h`; timeout `MQTT_STALE_MS` (30 s → `-` en LCD) en `Config.h`.
 
 LedControl en ESP32: usar `lib/LedControl` (parche `pgmspace.h`); el paquete wayoda del registry crashea/no compila. No forzar LoRa CS HIGH: GPIO18 es CLK del MAX.
 

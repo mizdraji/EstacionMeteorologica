@@ -160,7 +160,7 @@ void MqttSubscriber::begin() {
   mqttClient.setKeepAlive(30);
   mqttClient.setCallback(onMqttMessage);
 
-  Serial.print(F("[MQTT] demo broker "));
+  Serial.print(F("[MQTT] broker "));
   Serial.print(MQTT_HOST);
   Serial.print(F(" topic="));
   Serial.print(MQTT_TOPIC);

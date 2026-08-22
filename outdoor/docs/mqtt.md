@@ -1,16 +1,23 @@
 # MQTT (publicación telemetría)
 
-El firmware **outdoor** publica un JSON compacto al broker **demo público** de ThingsBoard MQTT (`demo.tbmq.io`). No es un broker de producción: cualquiera puede suscribirse al topic. El nodo [`indoor/`](../../indoor/) se suscribe a este mismo flujo; ver [arquitectura](../../docs/architecture.md) e [`indoor/docs/mqtt.md`](../../indoor/docs/mqtt.md).
+El firmware **outdoor** publica un JSON compacto al broker configurado en `src/secrets.h`. El nodo [`indoor/`](../../indoor/) se suscribe al mismo host y topic; ver [arquitectura](../../docs/architecture.md) e [`indoor/docs/mqtt.md`](../../indoor/docs/mqtt.md).
+
+## Credenciales (`src/secrets.h`)
+
+Host, usuario, password y topic **no** van en `Config.h`. Copiá `src/secrets.h.example` → `src/secrets.h` (no se versiona).
+
+| Define | Placeholder |
+|--------|-------------|
+| `MQTT_HOST` | `TU_MQTT_HOST` |
+| `MQTT_USER` | `TU_MQTT_USER` |
+| `MQTT_PASSWORD` | `TU_MQTT_PASSWORD` |
+| `MQTT_TOPIC` | `TU_MQTT_TOPIC` |
 
 ## Parámetros (`src/Config.h`)
 
-| Define | Valor demo |
-|--------|------------|
-| `MQTT_HOST` | `demo.tbmq.io` |
+| Define | Valor |
+|--------|-------|
 | `MQTT_PORT` | `1883` |
-| `MQTT_USER` | `demo` |
-| `MQTT_PASSWORD` | `""` (string vacío; no `nullptr`) |
-| `MQTT_TOPIC` | `WeatherStation` |
 | `MQTT_INTERVAL_MS` | `30000` (alineado al historial web) |
 | `MQTT_TASK_INTERVAL_MS` | `1000` (loop / reconnect no bloqueante) |
 
@@ -21,12 +28,12 @@ Si WiFi cae, no se spamea reconnect; al volver a conectar se usa backoff suave (
 ## Probar con mosquitto_sub
 
 ```powershell
-mosquitto_sub -h demo.tbmq.io -p 1883 -u demo -t WeatherStation -v
+mosquitto_sub -h TU_MQTT_HOST -p 1883 -u TU_MQTT_USER -P TU_MQTT_PASSWORD -t TU_MQTT_TOPIC -v
 ```
 
 Password vacía: omití `-P` o usá `-P ""` según tu cliente.
 
-Cada ~30 s deberías ver un mensaje en el topic `WeatherStation`.
+Cada ~`MQTT_INTERVAL_MS` deberías ver un mensaje en el topic configurado.
 
 ## Ejemplo de payload
 

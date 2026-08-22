@@ -111,7 +111,7 @@ void MqttPublisher::begin() {
   mqttClient.setBufferSize(384);
   mqttClient.setKeepAlive(30);
 
-  Serial.print(F("[MQTT] demo broker "));
+  Serial.print(F("[MQTT] broker "));
   Serial.print(MQTT_HOST);
   Serial.print(F(" topic="));
   Serial.print(MQTT_TOPIC);

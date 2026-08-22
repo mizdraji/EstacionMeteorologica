@@ -36,7 +36,7 @@ Declaradas en `platformio.ini` (`lib_deps`); PlatformIO las instala solo:
 ## Configuración rápida
 
 1. Copiá `src/secrets.h.example` → `src/secrets.h`
-2. Completá `OTA_PASSWORD` y `OPENWEATHERMAP_API_KEY` (WiFi **no** va en secrets; ver [docs/wifi-manager.md](docs/wifi-manager.md))
+2. Completá `OTA_PASSWORD`, `OPENWEATHERMAP_API_KEY` y MQTT (`MQTT_HOST` / `MQTT_USER` / `MQTT_PASSWORD` / `MQTT_TOPIC`) (WiFi **no** va en secrets; ver [docs/wifi-manager.md](docs/wifi-manager.md))
 3. Ajustá GPIO, NTP, hostname, ubicación OWM (`OWM_CITY_ID` / lat-lon) e intervalos en `src/Config.h`
 
 `src/secrets.h` no se versiona (`.gitignore` en la raíz del monorepo).
