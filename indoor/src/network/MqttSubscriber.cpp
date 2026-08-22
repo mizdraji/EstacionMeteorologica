@@ -1,7 +1,7 @@
 #include "MqttSubscriber.h"
 #include "../Config.h"
 #include "../core/IndoorData.h"
-#include <ESP8266WiFi.h>
+#include <WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <string.h>
@@ -74,7 +74,31 @@ static void applyPayload(const char* payload, unsigned int length) {
 
   d.mqttHasData = true;
   d.lastMqttMs = millis();
-  Serial.println(F("[MQTT] data"));
+
+  Serial.print(F("[MQTT] data T="));
+  if (weatherValueIsValid(d.temperature)) {
+    Serial.print(d.temperature, 1);
+  } else {
+    Serial.print(F("inv"));
+  }
+  Serial.print(F(" H="));
+  if (weatherValueIsValid(d.humidity)) {
+    Serial.print(d.humidity, 0);
+  } else {
+    Serial.print(F("inv"));
+  }
+  Serial.print(F(" P="));
+  if (weatherValueIsValid(d.pressure)) {
+    Serial.print(d.pressure, 1);
+  } else {
+    Serial.print(F("inv"));
+  }
+  Serial.print(F(" valid="));
+  Serial.print(weatherValueIsValid(d.temperature) ? 1 : 0);
+  Serial.print(weatherValueIsValid(d.humidity) ? 1 : 0);
+  Serial.print(weatherValueIsValid(d.pressure) ? 1 : 0);
+  Serial.print(F(" fresh=1 ext="));
+  Serial.println(d.extDesc[0] != '\0' ? d.extDesc : "-");
 }
 
 static void onMqttMessage(char* topic, byte* payload, unsigned int length) {
@@ -127,8 +151,9 @@ static bool tryConnect() {
 }
 
 void MqttSubscriber::begin() {
+  const uint32_t chipTail = static_cast<uint32_t>(ESP.getEfuseMac() & 0xFFFFFFULL);
   snprintf(clientId, sizeof(clientId), "%s-%06x", HOSTNAME,
-           static_cast<unsigned>(ESP.getChipId() & 0xFFFFFF));
+           static_cast<unsigned>(chipTail));
 
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
   mqttClient.setBufferSize(512);

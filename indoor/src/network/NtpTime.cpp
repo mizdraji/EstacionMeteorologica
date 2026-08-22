@@ -1,6 +1,6 @@
 #include "NtpTime.h"
 #include "../Config.h"
-#include <ESP8266WiFi.h>
+#include <WiFi.h>
 #include <WiFiUdp.h>
 #include <NTPClient.h>
 

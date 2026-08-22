@@ -1,27 +1,61 @@
 # Indoor display
 
-Firmware del nodo **interior** (ESP8266 NodeMCU / placa ideaspark con OLED): se suscribe al MQTT del outdoor y muestra datos en **MAX7219** (hora), **OLED** (diagnóstico) y **LCD ST7789 240×240** (UI principal).
+Firmware **0.3.7** del nodo **interior** (ESP32 **TTGO LoRa32 V1**, env PlatformIO `ttgo`): se suscribe al MQTT del outdoor y muestra datos en **MAX7219** (hora NTP) y **LCD ST7789 240×240** (cuatro vistas rotativas). OLED deshabilitado (`OLED_ENABLED=0`); LoRa no se usa (RST=GPIO14 LOW).
 
 ## Hardware
 
-Ver [`docs/pinout.md`](docs/pinout.md). Resumen LCD elegido:
+Ver [`docs/pinout.md`](docs/pinout.md). Board PlatformIO: `ttgo-lora32-v1` (env `ttgo`).
 
-| Señal LCD | GPIO | NodeMCU |
-|-----------|------|---------|
-| SCK | 13 | D7 |
-| MOSI (SDA) | 5 | D1 |
-| DC | 4 | D2 |
-| RST | 0 | D3 |
-| CS | — | atar a **GND** |
-| BLK | — | atar a **3V3** |
+### LCD GMT130-V1.0 (HW SPI propio, CS=-1)
 
-OLED: D6/D5. MAX7219: D8/D4/D0.
+| Señal | GPIO |
+|-------|------|
+| CS | — (`-1`) |
+| DC | 4 |
+| RST | 16 |
+| SCK | 23 |
+| MOSI | 13 |
+| VCC / BLK | 3V3 |
 
+```cpp
+SPIClass lcdSpi(HSPI);  // no VSPI (defaults 18/5 = MAX)
+lcdSpi.begin(23, -1, 13, -1);
+Adafruit_ST7789 tft(&lcdSpi, -1, 4, 16);
+tft.init(240, 240, SPI_MODE3);
+```
+
+No usar el bus LoRa ni VSPI para el LCD (HSPI en 23/13). LoRa: **RST GPIO14 = LOW**.
+
+### MAX7219 (LedControl)
+
+Librería: **LedControl** (`lib/LedControl`) — ctor `LedControl(data/DIN, clk, cs, n)`.
+Pines validados en este TTGO:
+
+| Señal | GPIO | LedControl |
+|-------|------|------------|
+| DIN | 21 | dataPin |
+| CLK | 18 | clkPin |
+| CS | 5 | csPin |
+
+Nota: 18/5 son también LoRa CS/SCK en la PCB; el radio queda en reset (RST=14 LOW).
+
+```powershell
+pio run -e indoor_max_test -t upload
+pio device monitor -e indoor_max_test
+```
 ## Flashear
 
-1. Abrí la carpeta `indoor/` como proyecto PlatformIO (o desde la raíz del monorepo).
-2. (Opcional) Copiá `src/secrets.h.example` → `src/secrets.h` solo si querés overrides; **no** hace falta para WiFi.
-3. Tras boot loop o cambio de `flash_mode` (DOUT), borrá flash y subí:
+Diagnóstico **solo LCD** (recomendado primero):
+
+```powershell
+cd indoor
+pio run -e indoor_lcd_test
+pio run -e indoor_lcd_test -t erase
+pio run -e indoor_lcd_test -t upload
+pio device monitor -e indoor_lcd_test
+```
+
+Firmware completo (default = `ttgo`):
 
 ```powershell
 cd indoor
@@ -31,28 +65,26 @@ pio run -t upload
 pio device monitor -b 115200
 ```
 
-4. Primera vez WiFi: el ESP abre AP `weather-indoor-01` → http://192.168.4.1 (timeout portal en `Config.h`).
-5. Diagnóstico sin displays: `pio run -e indoor_minimal -t upload` (solo Serial + pines boot-safe).
+Explícito:
 
-## Qué se ve en cada pantalla
+```powershell
+pio run -e ttgo -t upload
+pio device monitor -e ttgo
+```
+
+Primera vez WiFi: AP `weather-indoor-01` → http://192.168.4.1.
+
+## Qué se ve (0.3.7)
 
 | Display | Contenido |
 |---------|-----------|
-| **MAX7219** | Hora local `HH-MM-SS` vía NTP (UTC-3). Sin sync: guiones. |
-| **OLED 128×64** | Temp + humedad, presión, WiFi/RSSI, IP, estado MQTT + heap libre. |
-| **LCD 240×240** | Temp grande, humedad, presión, condición OWM (`ext_desc`) si viene en el JSON. |
+| **LCD** | Cuatro vistas a pantalla completa, rotación cada ~7 s (`LCD_VIEW_ROTATE_MS`): temperatura, humedad (con barra), presión, condición OWM (o WiFi/MQTT si no hay OWM). Chrome: “Indoor” / “Sin MQTT”, reloj `HH:MM` si NTP OK, puntos de vista abajo. **No** muestra uptime ni heap. |
+| **MAX7219** | Hora NTP `HH-MM-SS` (pool South America, UTC-3). Hasta sincronizar: dashes. |
+| **OLED** | Deshabilitado (`OLED_ENABLED=0`) |
 
-## MQTT
+WiFi: portal AP **`weather-indoor-01`** → http://192.168.4.1. MQTT topic `WeatherStation` en `demo.tbmq.io`.
 
-Mismo broker/topic que outdoor: [`docs/mqtt.md`](docs/mqtt.md).
-
-## Limitaciones (ESP8266 + 3 displays)
-
-- **RAM (~80 KB)**: WiFiManager + PubSubClient + ArduinoJson + buffer OLED (~1 KB) + SPI soft al LCD dejan poco margen. Evitá framebuffers grandes; el LCD dibuja con Adafruit GFX sin FB de pantalla completa.
-- **Soft SPI** al ST7789 es más lento que HW SPI; el refresh del LCD está throttled (~2 s).
-- **GPIO0 (D3) = LCD RST**: en boot debe quedar HIGH (reset inactivo). No atar RST a GND.
-- **Sin OTA** en v0.1 (prioridad: displays + MQTT).
-- Broker demo público: cualquiera puede publicar en el topic.
+LedControl en ESP32: usar `lib/LedControl` (parche `pgmspace.h`); el paquete wayoda del registry crashea/no compila. No forzar LoRa CS HIGH: GPIO18 es CLK del MAX.
 
 ## Docs
 

@@ -1,31 +1,32 @@
 #include <Arduino.h>
 #include "Config.h"
+#include <esp_system.h>
 
 #ifdef INDOOR_MINIMAL
 
-static void holdBootSafePins() {
-  pinMode(MAX7219_DIN_PIN, OUTPUT);
-  pinMode(MAX7219_CLK_PIN, OUTPUT);
-  digitalWrite(MAX7219_DIN_PIN, LOW);   // GPIO15
-  digitalWrite(MAX7219_CLK_PIN, HIGH);  // GPIO2
-  pinMode(LCD_RST_PIN, INPUT);          // GPIO0: no forzar LOW
+static void holdIdlePins() {
+  // LoRa en reset (RST LOW). No tocar GPIO18/5: son CLK/CS del MAX.
+  pinMode(LORA_RST_PIN, OUTPUT);
+  digitalWrite(LORA_RST_PIN, LOW);
+  pinMode(LCD_RST_PIN, OUTPUT);
+  digitalWrite(LCD_RST_PIN, HIGH);
+  pinMode(MAX7219_CS_PIN, OUTPUT);
+  digitalWrite(MAX7219_CS_PIN, HIGH);
 }
 
 void setup() {
-  holdBootSafePins();
+  holdIdlePins();
   Serial.begin(115200);
   delay(400);
   Serial.println();
   Serial.println(F("Indoor boot... (MINIMAL)"));
-  Serial.println(F("Si ves esto a 115200, el MCU arranca. Flash/strapping OK."));
+  Serial.println(F("Si ves esto a 115200, el MCU arranca. ESP32 TTGO OK."));
   Serial.print(F("FW "));
   Serial.println(FIRMWARE_VERSION);
   Serial.print(F("Reset reason: "));
-  Serial.println(ESP.getResetReason());
-  Serial.print(F("Flash chip ID/size: 0x"));
-  Serial.print(ESP.getFlashChipId(), HEX);
-  Serial.print(F(" / "));
-  Serial.println(ESP.getFlashChipRealSize());
+  Serial.println((int)esp_reset_reason());
+  Serial.print(F("Free heap: "));
+  Serial.println(ESP.getFreeHeap());
 }
 
 void loop() {
@@ -35,33 +36,33 @@ void loop() {
   Serial.print(F(" heap="));
   Serial.println(ESP.getFreeHeap());
   delay(1000);
-  yield();
 }
 
 #else
 
 #include "core/TaskManager.h"
 
-static void holdBootSafePins() {
-  pinMode(MAX7219_DIN_PIN, OUTPUT);
-  pinMode(MAX7219_CLK_PIN, OUTPUT);
-  digitalWrite(MAX7219_DIN_PIN, LOW);
-  digitalWrite(MAX7219_CLK_PIN, HIGH);
-  pinMode(LCD_RST_PIN, INPUT);
+static void holdIdlePins() {
+  // LoRa en reset (RST LOW). No tocar GPIO18/5: son CLK/CS del MAX.
+  pinMode(LORA_RST_PIN, OUTPUT);
+  digitalWrite(LORA_RST_PIN, LOW);
+  pinMode(LCD_RST_PIN, OUTPUT);
+  digitalWrite(LCD_RST_PIN, HIGH);
+  pinMode(MAX7219_CS_PIN, OUTPUT);
+  digitalWrite(MAX7219_CS_PIN, HIGH);
 }
 
 void setup() {
-  // Strapping seguro ANTES de Serial/drivers
-  holdBootSafePins();
+  holdIdlePins();
 
   Serial.begin(115200);
   delay(400);
   Serial.println();
-  Serial.println(F("Indoor boot..."));
+  Serial.println(F("Indoor boot... (ESP32 TTGO LoRa32)"));
   Serial.print(F("FW "));
   Serial.println(FIRMWARE_VERSION);
   Serial.print(F("Reset: "));
-  Serial.println(ESP.getResetReason());
+  Serial.println((int)esp_reset_reason());
 
   TaskManager::begin();
 }

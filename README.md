@@ -4,8 +4,8 @@ Dos firmwares en un solo repositorio:
 
 | Carpeta | Rol |
 |---------|-----|
-| [`outdoor/`](outdoor/) | Nodo **exterior**: sensores (AHT10 + BMP180), web local, OTA, publica MQTT |
-| [`indoor/`](indoor/) | Nodo **interior**: suscribe MQTT y muestra en MAX7219 + OLED + LCD 240×240 |
+| [`outdoor/`](outdoor/) | Nodo **exterior** (ESP8266): sensores (AHT10 + BMP180), web local, OTA, publica MQTT |
+| [`indoor/`](indoor/) | Nodo **interior** (ESP32 TTGO LoRa32 V1, fw **0.3.7**): suscribe MQTT; MAX7219 (hora NTP) + LCD 240×240 (4 vistas rotativas) |
 
 ## Flujo de datos
 
@@ -13,10 +13,10 @@ Dos firmwares en un solo repositorio:
 [outdoor]  --publica JSON-->  [broker MQTT]  --suscribe-->  [indoor]
               topic WeatherStation              demo.tbmq.io
                                                     │
-                                    ┌───────────────┼───────────────┐
-                                    ▼               ▼               ▼
-                                 MAX7219          OLED            LCD
-                                 (hora NTP)    (diagnóstico)   (UI clima)
+                                    ┌───────────────┴───────────────┐
+                                    ▼                               ▼
+                                 MAX7219                          LCD
+                                 (hora NTP)                    (UI clima)
 ```
 
 Detalle: [`docs/architecture.md`](docs/architecture.md).
@@ -33,15 +33,18 @@ pio run -t upload
 
 Guía: [`outdoor/README.md`](outdoor/README.md).
 
-### Interior
+### Interior (env default `ttgo`)
 
 ```powershell
 cd indoor
-pio run
+pio run                    # env ttgo
 pio run -t upload
+pio device monitor -b 115200
 ```
 
-Pinout LCD / flasheo / pantallas: [`indoor/README.md`](indoor/README.md).
+Diagnóstico: `pio run -e indoor_lcd_test -t upload` · `pio run -e indoor_max_test -t upload`.
+
+Pinout (LCD HSPI 23/13 DC=4 RST=16 CS=-1; MAX DIN=21 CLK=18 CS=5), AP `weather-indoor-01`, MQTT `WeatherStation`: [`indoor/README.md`](indoor/README.md).
 
 ## Secrets
 

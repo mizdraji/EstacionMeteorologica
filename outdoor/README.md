@@ -10,7 +10,7 @@ Parte del monorepo: ver [README raíz](../README.md) e [arquitectura](../docs/ar
 
 - **AHT10** — temperatura y humedad (I2C)
 - **BMP180** — temperatura, presión y altitud (I2C)
-- Sin OLED / MAX7219: la visualización local queda en el nodo [`indoor/`](../indoor/) (WIP); aquí se publica por MQTT y web.
+- Sin OLED / MAX7219: la visualización local queda en el nodo [`indoor/`](../indoor/) (ESP32 TTGO LoRa32, firmware indoor 0.3.7); aquí se publica por MQTT y web.
 
 ## Documentación
 

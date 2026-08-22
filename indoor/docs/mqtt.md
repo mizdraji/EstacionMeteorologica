@@ -17,14 +17,14 @@ ClientId: `HOSTNAME` + chipId (ej. `weather-indoor-01-a1b2c3`).
 
 ## Campos usados del JSON
 
-| Campo | Uso en UI |
+| Campo | Uso en UI (LCD 0.3.7; OLED off) |
 |-------|-----------|
-| `temp_main` (fallback `temp_aht` / `temp_bmp`) | Temp LCD + OLED |
-| `humidity` | Humedad |
-| `pressure` | Presión |
-| `ext_desc`, `ext_temp`, `ext_ok` | Condición OWM en LCD |
-| `bmp180_ok`, `aht10_ok` | (reservado / diagnóstico) |
-| `ip`, `firmware` | Guardados; OLED prioriza IP local del indoor |
+| `temp_main` (fallback `temp_aht` / `temp_bmp`) | Vista temperatura |
+| `humidity` | Vista humedad |
+| `pressure` | Vista presión |
+| `ext_desc`, `ext_temp`, `ext_humidity`, `ext_ok` | Vista OWM (si no hay OWM: WiFi/MQTT) |
+| `bmp180_ok`, `aht10_ok` | (reservado) |
+| `ip`, `firmware`, `uptime`, `heap` | Pueden llegar en el JSON outdoor; **no** se muestran en LCD |
 
 Payload completo: [`../../outdoor/docs/mqtt.md`](../../outdoor/docs/mqtt.md).
 

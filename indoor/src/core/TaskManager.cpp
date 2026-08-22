@@ -16,7 +16,7 @@ static Max7219Display max7219;
 static unsigned long bootMillis = 0;
 static bool displaysReady = false;
 
-static void holdBootSafePins();
+static void holdIdlePins();
 static void initDisplaysDeferred();
 static void taskWiFiCallback();
 static void taskNtpCallback();
@@ -36,9 +36,19 @@ static Task taskSystem(SYSTEM_INTERVAL_MS, TASK_FOREVER, &taskSystemCallback);
 
 void TaskManager::begin() {
   bootMillis = millis();
-  holdBootSafePins();
+  holdIdlePins();
   initDisplaysDeferred();
-  holdBootSafePins();
+  // No retocar CS/CLK del MAX tras LedControl (holdIdlePins solo LoRa/LCD RST).
+  pinMode(LORA_RST_PIN, OUTPUT);
+  digitalWrite(LORA_RST_PIN, LOW);
+  pinMode(LCD_RST_PIN, OUTPUT);
+  digitalWrite(LCD_RST_PIN, HIGH);
+
+  // LCD vive en HSPI; no hace falta SPI.begin/end del bus global (VSPI).
+  if (IndoorData::instance().lcdOK) {
+    LcdUi::claimBus();
+    LcdUi::invalidate();
+  }
 
   Serial.println(F("[BOOT] WiFi..."));
   stationWiFi.begin();
@@ -68,38 +78,67 @@ void TaskManager::run() {
   scheduler.execute();
 }
 
-static void holdBootSafePins() {
-  pinMode(MAX7219_DIN_PIN, OUTPUT);
-  pinMode(MAX7219_CLK_PIN, OUTPUT);
-  digitalWrite(MAX7219_DIN_PIN, LOW);
-  digitalWrite(MAX7219_CLK_PIN, HIGH);
-  pinMode(LCD_RST_PIN, INPUT);
+static void holdIdlePins() {
+  // LoRa en reset (RST LOW). GPIO18/5 = MAX CLK/CS (no forzar LoRa CS HIGH).
+  pinMode(LORA_RST_PIN, OUTPUT);
+  digitalWrite(LORA_RST_PIN, LOW);
+  pinMode(LCD_RST_PIN, OUTPUT);
+  digitalWrite(LCD_RST_PIN, HIGH);
+  pinMode(MAX7219_CS_PIN, OUTPUT);
+  digitalWrite(MAX7219_CS_PIN, HIGH);
 }
 
 static void initDisplaysDeferred() {
   IndoorData& data = IndoorData::instance();
 
-  Serial.println(F("[BOOT] MAX7219..."));
-  data.max7219OK = max7219.begin(MAX7219_DIN_PIN, MAX7219_CLK_PIN, MAX7219_CS_PIN);
-  if (data.max7219OK) {
-    max7219.setIntensity(MAX7219_INTENSITY);
-    max7219.showDashes();
-    Serial.println(F("[MAX7219] OK"));
-  } else {
-    Serial.println(F("[MAX7219] skip/fail"));
-  }
-  holdBootSafePins();
-
+  // LCD primero (HSPI 23/13): luego MAX bitbang en 21/18/5 — buses distintos.
+  // NO llamar SPI.end(): destruía el bus del panel y dejaba splash/negro.
+#if OLED_ENABLED
   Serial.println(F("[BOOT] OLED..."));
   data.oledOK = OledDisplay::begin();
   if (data.oledOK) {
-    OledDisplay::showBoot("Indoor", FIRMWARE_VERSION);
+    OledDisplay::showBoot("Weather", FIRMWARE_VERSION);
   }
+#else
+  data.oledOK = OledDisplay::begin();  // log + false
+#endif
 
-  Serial.println(F("[BOOT] LCD..."));
+  Serial.println(F("[BOOT] LCD HSPI (bus propio, no LoRa/VSPI)..."));
   data.lcdOK = LcdUi::begin();
   if (data.lcdOK) {
+    Serial.println(F("[BOOT] LCD OK → splash boot"));
     LcdUi::showBoot();
+  } else {
+    Serial.println(F("[BOOT] LCD FAIL (begin=false)"));
+  }
+
+  // MAX en bitbang puro — no compartir ni liberar HSPI del LCD.
+  delay(20);
+  holdIdlePins();
+
+  Serial.println(F("[BOOT] MAX7219 LedControl (post-LCD, init única)..."));
+  Serial.flush();
+  data.max7219OK = max7219.begin(MAX7219_DIN_PIN, MAX7219_CLK_PIN, MAX7219_CS_PIN, true);
+  if (data.max7219OK) {
+    max7219.setIntensity(MAX7219_INTENSITY);
+    max7219.showDashes();
+    Serial.print(F("[MAX7219] OK LedControl DIN/CLK/CS GPIO"));
+    Serial.print(MAX7219_DIN_PIN);
+    Serial.print('/');
+    Serial.print(MAX7219_CLK_PIN);
+    Serial.print('/');
+    Serial.println(MAX7219_CS_PIN);
+    Serial.println(F("[MAX7219] dashes (sin NTP → --------)"));
+  } else {
+    Serial.println(F("[MAX7219] skip/fail"));
+  }
+
+  // Tras MAX: reclamar HSPI y forzar UI (sale del splash aunque aún no haya MQTT).
+  if (data.lcdOK) {
+    LcdUi::claimBus();
+    LcdUi::invalidate();
+    Serial.println(F("[BOOT] LCD claimBus + invalidate post-MAX"));
+    LcdUi::render(data);
   }
 
   displaysReady = true;
@@ -111,7 +150,10 @@ static void taskNtpCallback() { NtpTime::update(); }
 static void taskMqttCallback() { MqttSubscriber::update(); }
 
 static void taskClockCallback() {
-  if (!displaysReady || !IndoorData::instance().max7219OK) return;
+  if (!displaysReady || !IndoorData::instance().max7219OK) {
+    return;
+  }
+  // Solo update de dígitos — NUNCA begin/re-init aquí. Bitbang 21/18/5 ≠ HSPI LCD.
   if (NtpTime::isSynced()) {
     max7219.showTime(NtpTime::hours(), NtpTime::minutes(), NtpTime::seconds());
   } else {
@@ -120,12 +162,22 @@ static void taskClockCallback() {
 }
 
 static void taskOledCallback() {
-  if (!displaysReady) return;
+  if (!displaysReady) {
+    return;
+  }
+  if (!IndoorData::instance().oledOK) {
+    return;
+  }
   OledDisplay::showStatus(IndoorData::instance());
 }
 
 static void taskLcdCallback() {
-  if (!displaysReady) return;
+  if (!displaysReady) {
+    return;
+  }
+  if (!IndoorData::instance().lcdOK) {
+    return;
+  }
   LcdUi::render(IndoorData::instance());
 }
 

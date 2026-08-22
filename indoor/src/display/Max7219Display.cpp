@@ -1,77 +1,90 @@
 #include "Max7219Display.h"
 #include <string.h>
 
-bool Max7219Display::begin(uint8_t dinPin, uint8_t clkPin, uint8_t csPin) {
-  _din = dinPin;
-  _clk = clkPin;
-  _cs = csPin;
+Max7219Display::~Max7219Display() {
+  delete _lc;
+  _lc = nullptr;
+}
 
-  // ESP8266 strapping: GPIO15 (D8) debe quedar LOW, GPIO2 (D4) HIGH
-  // antes de cualquier tráfico SPI hacia el MAX7219.
-  pinMode(_din, OUTPUT);
-  pinMode(_clk, OUTPUT);
-  pinMode(_cs, OUTPUT);
-  digitalWrite(_din, LOW);   // GPIO15 boot-safe
-  digitalWrite(_clk, HIGH);  // GPIO2 boot-safe (no dejar LOW)
-  digitalWrite(_cs, HIGH);
-  delay(1);
+bool Max7219Display::begin(uint8_t dinPin, uint8_t clkPin, uint8_t csPin, bool force) {
+  if (_ready && !force) {
+    return true;
+  }
 
-  send(0x0F, 0x00);  // display test off
-  send(0x0C, 0x01);  // normal operation
-  send(0x0B, 0x07);  // scan all 8 digits
-  send(0x09, 0xFF);  // BCD decode for all digits
-  setIntensity(2);
-  clear();
+  delete _lc;
+  // LedControl(dataPin, clkPin, csPin, numDevices) — mismo orden que Reloj_Despertador.
+  _lc = new LedControl(static_cast<int>(dinPin), static_cast<int>(clkPin),
+                       static_cast<int>(csPin), 1);
+  if (_lc == nullptr) {
+    _ready = false;
+    return false;
+  }
 
-  // Tras hablar con el chip, restaurar strapping por si hay WDT/reset
-  digitalWrite(_din, LOW);
-  digitalWrite(_clk, HIGH);
+  // Ctor deja el chip en shutdown; salir a operación normal (como en Reloj_Despertador).
+  _lc->shutdown(0, false);
+  _lc->setScanLimit(0, 7);
+  _lc->setIntensity(0, 2);
+  _lc->clearDisplay(0);
+
+  _ready = true;
   return true;
 }
 
-void Max7219Display::send(uint8_t address, uint8_t data) {
-  digitalWrite(_cs, LOW);
-  shiftOut(_din, _clk, MSBFIRST, address);
-  shiftOut(_din, _clk, MSBFIRST, data);
-  digitalWrite(_cs, HIGH);
-  // shiftOut deja CLK LOW; GPIO2 debe volver a HIGH (strapping)
-  if (_clk == 2) {
-    digitalWrite(_clk, HIGH);
-  }
-}
-
-void Max7219Display::setDigitRaw(uint8_t digit, uint8_t value) {
-  if (digit > 7) {
+void Max7219Display::reassertAfterBusConflict() {
+  if (!_ready || _lc == nullptr) {
     return;
   }
-  send(digit + 1, value);
+  _lc->shutdown(0, false);
+  _lc->setScanLimit(0, 7);
+}
+
+void Max7219Display::ensureTestOff() {
+  // LedControl apaga OP_DISPLAYTEST en el constructor; nada que forzar aquí.
 }
 
 void Max7219Display::clear() {
-  for (uint8_t i = 0; i < 8; i++) {
-    setDigitRaw(i, 0x0F);
+  if (!_ready || _lc == nullptr) {
+    return;
   }
+  _lc->clearDisplay(0);
 }
 
 void Max7219Display::setIntensity(uint8_t level) {
+  if (!_ready || _lc == nullptr) {
+    return;
+  }
   if (level > 15) {
     level = 15;
   }
-  send(0x0A, level);
+  _lc->setIntensity(0, level);
+}
+
+void Max7219Display::writeDigitOrDash(uint8_t digit, char c) {
+  if (_lc == nullptr || digit > 7) {
+    return;
+  }
+  if (c >= '0' && c <= '9') {
+    _lc->setDigit(0, digit, static_cast<byte>(c - '0'), false);
+  } else if (c == '-') {
+    _lc->setChar(0, digit, '-', false);
+  } else {
+    _lc->setChar(0, digit, ' ', false);
+  }
 }
 
 void Max7219Display::showDashes() {
-  setDigitRaw(7, 0x0A);
-  setDigitRaw(6, 0x0A);
-  setDigitRaw(5, 0x0A);
-  setDigitRaw(4, 0x0A);
-  setDigitRaw(3, 0x0A);
-  setDigitRaw(2, 0x0A);
-  setDigitRaw(1, 0x0A);
-  setDigitRaw(0, 0x0A);
+  if (!_ready || _lc == nullptr) {
+    return;
+  }
+  for (uint8_t i = 0; i < 8; i++) {
+    _lc->setChar(0, i, '-', false);
+  }
 }
 
 void Max7219Display::showTime(uint8_t hours, uint8_t minutes, uint8_t seconds) {
+  if (!_ready || _lc == nullptr) {
+    return;
+  }
   if (hours > 23) {
     hours = 0;
   }
@@ -82,17 +95,21 @@ void Max7219Display::showTime(uint8_t hours, uint8_t minutes, uint8_t seconds) {
     seconds = 0;
   }
 
-  setDigitRaw(7, hours / 10);
-  setDigitRaw(6, hours % 10);
-  setDigitRaw(5, 0x0A);
-  setDigitRaw(4, minutes / 10);
-  setDigitRaw(3, minutes % 10);
-  setDigitRaw(2, 0x0A);
-  setDigitRaw(1, seconds / 10);
-  setDigitRaw(0, seconds % 10);
+  // Digit 7 = MSB (HH), digit 0 = LSB (unidad de segundos) — igual que Reloj_Despertador.
+  _lc->setDigit(0, 7, hours / 10, false);
+  _lc->setDigit(0, 6, hours % 10, false);
+  _lc->setChar(0, 5, '-', false);
+  _lc->setDigit(0, 4, minutes / 10, false);
+  _lc->setDigit(0, 3, minutes % 10, false);
+  _lc->setChar(0, 2, '-', false);
+  _lc->setDigit(0, 1, seconds / 10, false);
+  _lc->setDigit(0, 0, seconds % 10, false);
 }
 
 void Max7219Display::showText(const char* text) {
+  if (!_ready || _lc == nullptr) {
+    return;
+  }
   char buf[9] = {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '\0'};
   if (text != nullptr) {
     size_t len = strlen(text);
@@ -104,14 +121,8 @@ void Max7219Display::showText(const char* text) {
     }
   }
 
+  // Texto izquierda → digit 7; derecha → digit 0.
   for (uint8_t i = 0; i < 8; i++) {
-    const char c = buf[i];
-    uint8_t value = 0x0F;
-    if (c >= '0' && c <= '9') {
-      value = (uint8_t)(c - '0');
-    } else if (c == '-') {
-      value = 0x0A;
-    }
-    setDigitRaw(7 - i, value);
+    writeDigitOrDash(static_cast<uint8_t>(7 - i), buf[i]);
   }
 }

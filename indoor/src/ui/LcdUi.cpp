@@ -1,46 +1,130 @@
 #include "LcdUi.h"
 #include "../Config.h"
+#include "../network/NtpTime.h"
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7789.h>
+#include <SPI.h>
 #include <string.h>
 
-// Soft SPI: pines libres (no chocan con OLED I2C ni MAX7219).
-static Adafruit_ST7789 tft = Adafruit_ST7789(LCD_CS_PIN, LCD_DC_PIN, LCD_MOSI_PIN,
-                                             LCD_SCK_PIN, LCD_RST_PIN);
+// LCD en HSPI dedicado (SCK=23 MOSI=13). NO usar SPI global (VSPI):
+// los pines por defecto de VSPI son SCK=18 / SS=5 — mismos que MAX LedControl.
+static SPIClass lcdSpi(HSPI);
+static Adafruit_ST7789 tft = Adafruit_ST7789(&lcdSpi, LCD_CS_PIN, LCD_DC_PIN, LCD_RST_PIN);
 
 bool LcdUi::_ready = false;
 unsigned long LcdUi::_lastUpdate = 0;
+unsigned long LcdUi::_lastViewMs = 0;
 bool LcdUi::_needsFullRedraw = true;
+uint8_t LcdUi::_view = 0;
 float LcdUi::_lastTemp = WEATHER_VALUE_INVALID;
 float LcdUi::_lastHum = WEATHER_VALUE_INVALID;
 float LcdUi::_lastPress = WEATHER_VALUE_INVALID;
 bool LcdUi::_lastFresh = false;
+bool LcdUi::_lastWifi = false;
+bool LcdUi::_lastMqtt = false;
 char LcdUi::_lastDesc[INDOOR_EXT_DESC_MAX] = {0};
+uint8_t LcdUi::_lastMinute = 255;
+uint8_t LcdUi::_logSkipCount = 0;
 
-// Paleta legible (sin púrpura / dark-purple defaults)
-static const uint16_t COL_BG = 0x18C3;      // azul-gris oscuro
-static const uint16_t COL_PANEL = 0x2124;   // panel
-static const uint16_t COL_TEMP = 0xFD20;    // naranja
-static const uint16_t COL_HUM = 0x07FF;     // cian
-static const uint16_t COL_PRESS = 0xAFE5;   // verde suave
-static const uint16_t COL_TEXT = 0xEF7D;    // blanco-gris
-static const uint16_t COL_MUTED = 0x8410;   // gris
-static const uint16_t COL_WARN = 0xF800;    // rojo stale
+static const uint16_t COL_BG = 0x10A2;
+static const uint16_t COL_PANEL = 0x2124;
+static const uint16_t COL_TEMP = 0xFD20;
+static const uint16_t COL_HUM = 0x07FF;
+static const uint16_t COL_PRESS = 0xAFE5;
+static const uint16_t COL_OWM = 0xFFE0;
+static const uint16_t COL_TEXT = 0xEF7D;
+static const uint16_t COL_MUTED = 0x8410;
+static const uint16_t COL_WARN = 0xF800;
+static const uint16_t COL_DOT = 0x4A49;
+
+static uint16_t accentForView(uint8_t view) {
+  switch (view) {
+    case 0:
+      return COL_TEMP;
+    case 1:
+      return COL_HUM;
+    case 2:
+      return COL_PRESS;
+    default:
+      return COL_OWM;
+  }
+}
+
+void LcdUi::claimBus() {
+  lcdSpi.begin(LCD_SCK_PIN, LCD_MISO_PIN, LCD_MOSI_PIN, -1);
+}
+
+void LcdUi::invalidate() {
+  _needsFullRedraw = true;
+  _lastUpdate = 0;
+}
+
+void LcdUi::logRenderDecision(const char* why, const IndoorData& data) {
+  Serial.print(F("[LCD] "));
+  Serial.print(why);
+  Serial.print(F(" v="));
+  Serial.print(_view);
+  Serial.print(F(" T="));
+  if (weatherValueIsValid(data.temperature)) {
+    Serial.print(data.temperature, 1);
+  } else {
+    Serial.print(F("inv"));
+  }
+  Serial.print(F(" H="));
+  if (weatherValueIsValid(data.humidity)) {
+    Serial.print(data.humidity, 0);
+  } else {
+    Serial.print(F("inv"));
+  }
+  Serial.print(F(" P="));
+  if (weatherValueIsValid(data.pressure)) {
+    Serial.print(data.pressure, 1);
+  } else {
+    Serial.print(F("inv"));
+  }
+  Serial.print(F(" fresh="));
+  Serial.print(data.dataIsFresh() ? 1 : 0);
+  Serial.print(F(" mqtt="));
+  Serial.print(data.mqttConnected ? 1 : 0);
+  Serial.print(F(" has="));
+  Serial.println(data.mqttHasData ? 1 : 0);
+}
 
 bool LcdUi::begin() {
-  // GPIO0 (D3) = RST: NO forzar LOW al inicio (strapping / flash mode).
-  // Adafruit_ST7789 hace soft/hard reset por software en init() — eso es OK
-  // porque el chip ya arrancó. Dejar pin en INPUT (pull-up del módulo) antes.
-  pinMode(LCD_RST_PIN, INPUT);
-  delay(2);
+  Serial.println(F("[LCD] === init GMT130-V1.0 ST7789 HSPI dedicado ==="));
+  Serial.println(F("[LCD] ctor Adafruit_ST7789(&lcdSpi/HSPI, CS, DC, RST)"));
+  Serial.print(F("[LCD] CS="));
+  Serial.print(LCD_CS_PIN);
+  Serial.print(F("  DC=GPIO"));
+  Serial.print(LCD_DC_PIN);
+  Serial.print(F("  RST=GPIO"));
+  Serial.println(LCD_RST_PIN);
+  Serial.print(F("[LCD] HSPI SCK=GPIO"));
+  Serial.print(LCD_SCK_PIN);
+  Serial.print(F("  MOSI=GPIO"));
+  Serial.println(LCD_MOSI_PIN);
+  Serial.println(F("[LCD] cableado: VCC/BLK→3V3, sin pin CS (CS=-1)"));
+  Serial.println(F("[LCD] bus HSPI ≠ MAX bitbang 21/18/5; MODE3"));
 
-  // Con CS=-1 el módulo debe tener CS a GND.
-  tft.init(LCD_WIDTH, LCD_HEIGHT);
+  pinMode(LCD_RST_PIN, OUTPUT);
+  digitalWrite(LCD_RST_PIN, HIGH);
+
+  claimBus();
+  tft.init(LCD_WIDTH, LCD_HEIGHT, SPI_MODE3);
   tft.setRotation(0);
+  tft.invertDisplay(false);
+
+  tft.fillScreen(ST77XX_RED);
+  delay(80);
+  tft.fillScreen(ST77XX_GREEN);
+  delay(80);
   tft.fillScreen(COL_BG);
+
   _ready = true;
   _needsFullRedraw = true;
-  Serial.println(F("[LCD] ST7789 OK"));
+  _view = 0;
+  _lastViewMs = millis();
+  Serial.println(F("[LCD] ST7789 OK (HSPI CS=-1 MODE3)"));
   return true;
 }
 
@@ -48,7 +132,9 @@ void LcdUi::showBoot() {
   if (!_ready) {
     return;
   }
+  claimBus();
   tft.fillScreen(COL_BG);
+  tft.fillRect(0, 0, 8, LCD_HEIGHT, COL_TEMP);
   tft.setTextWrap(false);
   tft.setTextColor(COL_TEXT);
   tft.setTextSize(2);
@@ -63,118 +149,274 @@ void LcdUi::showBoot() {
   tft.print(FIRMWARE_VERSION);
 }
 
-void LcdUi::drawBackground() {
-  tft.fillScreen(COL_BG);
-  tft.fillRoundRect(8, 8, 224, 56, 8, COL_PANEL);
-  tft.fillRoundRect(8, 72, 224, 48, 8, COL_PANEL);
-  tft.fillRoundRect(8, 128, 224, 48, 8, COL_PANEL);
-  tft.fillRoundRect(8, 184, 224, 48, 8, COL_PANEL);
-
-  tft.setTextSize(1);
-  tft.setTextColor(COL_MUTED);
-  tft.setCursor(18, 14);
-  tft.print(F("TEMPERATURA"));
-  tft.setCursor(18, 78);
-  tft.print(F("HUMEDAD"));
-  tft.setCursor(18, 134);
-  tft.print(F("PRESION"));
-  tft.setCursor(18, 190);
-  tft.print(F("CONDICION OWM"));
+void LcdUi::wipeHorizontal(uint16_t color) {
+  // Franjas verticales: efecto wipe sin delay() ni buffers.
+  const int16_t band = 24;
+  for (int16_t x = 0; x < LCD_WIDTH; x += band) {
+    tft.fillRect(x, 0, band, LCD_HEIGHT, color);
+  }
 }
 
-void LcdUi::drawValues(const IndoorData& data) {
-  char buf[24];
+void LcdUi::drawChrome(const IndoorData& data) {
+  tft.fillRect(0, 0, LCD_WIDTH, 22, COL_BG);
+  tft.fillRect(0, 218, LCD_WIDTH, 22, COL_BG);
 
-  // Temperatura grande
-  tft.fillRoundRect(12, 28, 216, 32, 4, COL_PANEL);
-  tft.setTextSize(3);
-  tft.setTextColor(data.dataIsFresh() ? COL_TEMP : COL_WARN);
-  tft.setCursor(18, 30);
-  if (weatherValueIsValid(data.temperature)) {
-    snprintf(buf, sizeof(buf), "%.1f C", data.temperature);
-  } else {
-    snprintf(buf, sizeof(buf), "--.- C");
-  }
-  tft.print(buf);
-
-  // Humedad
-  tft.fillRoundRect(12, 90, 216, 24, 4, COL_PANEL);
-  tft.setTextSize(2);
-  tft.setTextColor(COL_HUM);
-  tft.setCursor(18, 94);
-  if (weatherValueIsValid(data.humidity)) {
-    snprintf(buf, sizeof(buf), "%.0f %% RH", data.humidity);
-  } else {
-    snprintf(buf, sizeof(buf), "-- %% RH");
-  }
-  tft.print(buf);
-
-  // Presión
-  tft.fillRoundRect(12, 146, 216, 24, 4, COL_PANEL);
-  tft.setTextColor(COL_PRESS);
-  tft.setCursor(18, 150);
-  if (weatherValueIsValid(data.pressure)) {
-    snprintf(buf, sizeof(buf), "%.1f hPa", data.pressure);
-  } else {
-    snprintf(buf, sizeof(buf), "--.- hPa");
-  }
-  tft.print(buf);
-
-  // Condición OWM / estado
-  tft.fillRoundRect(12, 202, 216, 24, 4, COL_PANEL);
+  tft.setTextWrap(false);
   tft.setTextSize(1);
-  tft.setTextColor(COL_TEXT);
-  tft.setCursor(18, 210);
-  if (data.extDesc[0] != '\0' && data.extOK) {
-    tft.print(data.extDesc);
-    if (weatherValueIsValid(data.extTemp)) {
-      snprintf(buf, sizeof(buf), "  %.0fC", data.extTemp);
-      tft.print(buf);
-    }
-  } else if (!data.mqttConnected) {
+  if (!data.dataIsFresh()) {
     tft.setTextColor(COL_WARN);
+    tft.setCursor(10, 7);
     tft.print(F("Sin MQTT"));
-  } else if (!data.dataIsFresh()) {
-    tft.setTextColor(COL_WARN);
-    tft.print(F("Datos antiguos"));
   } else {
     tft.setTextColor(COL_MUTED);
-    tft.print(F("Sin OWM"));
+    tft.setCursor(10, 7);
+    tft.print(F("Indoor"));
   }
+
+  if (NtpTime::isSynced()) {
+    char clk[9];
+    snprintf(clk, sizeof(clk), "%02u:%02u", NtpTime::hours(), NtpTime::minutes());
+    tft.setTextColor(COL_TEXT);
+    tft.setCursor(190, 7);
+    tft.print(clk);
+  }
+
+  const int16_t startX = (LCD_WIDTH - (LCD_VIEW_COUNT - 1) * 16) / 2;
+  for (uint8_t i = 0; i < LCD_VIEW_COUNT; i++) {
+    const int16_t cx = startX + (int16_t)i * 16;
+    const uint16_t c = (i == _view) ? accentForView(_view) : COL_DOT;
+    tft.fillCircle(cx, 228, i == _view ? 4 : 3, c);
+  }
+}
+
+void LcdUi::drawTempView(const IndoorData& data) {
+  tft.fillRect(0, 0, 8, LCD_HEIGHT, COL_TEMP);
+  tft.setTextWrap(false);
+  tft.setTextSize(1);
+  tft.setTextColor(COL_MUTED);
+  tft.setCursor(24, 36);
+  tft.print(F("TEMPERATURA"));
+
+  char buf[16];
+  tft.setTextSize(5);
+  tft.setTextColor(data.dataIsFresh() ? COL_TEMP : COL_WARN);
+  tft.setCursor(24, 78);
+  if (weatherValueIsValid(data.temperature)) {
+    snprintf(buf, sizeof(buf), "%.1f", data.temperature);
+  } else {
+    snprintf(buf, sizeof(buf), "--.-");
+  }
+  tft.print(buf);
+
+  tft.setTextSize(3);
+  tft.setTextColor(COL_TEMP);
+  tft.setCursor(24, 148);
+  tft.print(F("C"));
+}
+
+void LcdUi::drawHumView(const IndoorData& data) {
+  tft.fillRect(0, 0, 8, LCD_HEIGHT, COL_HUM);
+  tft.setTextWrap(false);
+  tft.setTextSize(1);
+  tft.setTextColor(COL_MUTED);
+  tft.setCursor(24, 36);
+  tft.print(F("HUMEDAD"));
+
+  char buf[16];
+  tft.setTextSize(5);
+  tft.setTextColor(COL_HUM);
+  tft.setCursor(24, 78);
+  if (weatherValueIsValid(data.humidity)) {
+    snprintf(buf, sizeof(buf), "%.0f", data.humidity);
+  } else {
+    snprintf(buf, sizeof(buf), "--");
+  }
+  tft.print(buf);
+
+  tft.setTextSize(3);
+  tft.setCursor(24, 148);
+  tft.print(F("%"));
+
+  const int16_t barX = 24;
+  const int16_t barY = 188;
+  const int16_t barW = 192;
+  tft.drawRoundRect(barX, barY, barW, 12, 3, COL_MUTED);
+  if (weatherValueIsValid(data.humidity)) {
+    float h = data.humidity;
+    if (h < 0) {
+      h = 0;
+    }
+    if (h > 100) {
+      h = 100;
+    }
+    const int16_t fill = (int16_t)((barW - 4) * h / 100.0f);
+    if (fill > 0) {
+      tft.fillRoundRect(barX + 2, barY + 2, fill, 8, 2, COL_HUM);
+    }
+  }
+}
+
+void LcdUi::drawPressView(const IndoorData& data) {
+  tft.fillRect(0, 0, 8, LCD_HEIGHT, COL_PRESS);
+  tft.setTextWrap(false);
+  tft.setTextSize(1);
+  tft.setTextColor(COL_MUTED);
+  tft.setCursor(24, 36);
+  tft.print(F("PRESION"));
+
+  char buf[16];
+  tft.setTextSize(4);
+  tft.setTextColor(COL_PRESS);
+  tft.setCursor(24, 88);
+  if (weatherValueIsValid(data.pressure)) {
+    snprintf(buf, sizeof(buf), "%.1f", data.pressure);
+  } else {
+    snprintf(buf, sizeof(buf), "--.-");
+  }
+  tft.print(buf);
+
+  tft.setTextSize(2);
+  tft.setCursor(24, 150);
+  tft.print(F("hPa"));
+}
+
+void LcdUi::drawOwmView(const IndoorData& data) {
+  tft.fillRect(0, 0, 8, LCD_HEIGHT, COL_OWM);
+  tft.setTextSize(1);
+  tft.setTextColor(COL_MUTED);
+  tft.setCursor(24, 36);
+
+  const bool hasOwm = data.extOK && data.extDesc[0] != '\0';
+  if (hasOwm) {
+    tft.print(F("CONDICION OWM"));
+    tft.setTextWrap(true);
+    tft.setTextSize(2);
+    tft.setTextColor(COL_TEXT);
+    tft.setCursor(24, 70);
+    tft.print(data.extDesc);
+    tft.setTextWrap(false);
+    if (weatherValueIsValid(data.extTemp)) {
+      char buf[20];
+      snprintf(buf, sizeof(buf), "Ext %.0f C", data.extTemp);
+      tft.setTextSize(2);
+      tft.setTextColor(COL_OWM);
+      tft.setCursor(24, 150);
+      tft.print(buf);
+    }
+    if (weatherValueIsValid(data.extHumidity)) {
+      char buf[20];
+      snprintf(buf, sizeof(buf), "HR %.0f %%", data.extHumidity);
+      tft.setTextSize(1);
+      tft.setTextColor(COL_MUTED);
+      tft.setCursor(24, 186);
+      tft.print(buf);
+    }
+    return;
+  }
+
+  tft.print(F("ESTADO"));
+  tft.setTextWrap(false);
+  tft.setTextSize(2);
+  tft.setTextColor(data.wifiConnected ? COL_TEXT : COL_WARN);
+  tft.setCursor(24, 72);
+  if (data.wifiConnected) {
+    tft.print(F("WiFi OK"));
+    tft.setTextSize(1);
+    tft.setTextColor(COL_MUTED);
+    tft.setCursor(24, 104);
+    tft.print(F("RSSI "));
+    tft.print(data.wifiRSSI);
+    tft.print(F(" dBm"));
+  } else {
+    tft.print(F("WiFi off"));
+  }
+
+  tft.setTextSize(2);
+  tft.setTextColor(data.mqttConnected && data.dataIsFresh() ? COL_TEXT : COL_WARN);
+  tft.setCursor(24, 140);
+  if (!data.mqttConnected) {
+    tft.print(F("Sin MQTT"));
+  } else if (!data.dataIsFresh()) {
+    tft.print(F("MQTT stale"));
+  } else {
+    tft.print(F("MQTT OK"));
+  }
+}
+
+void LcdUi::drawView(const IndoorData& data) {
+  tft.fillScreen(COL_BG);
+  tft.setTextWrap(false);
+  switch (_view) {
+    case 0:
+      drawTempView(data);
+      break;
+    case 1:
+      drawHumView(data);
+      break;
+    case 2:
+      drawPressView(data);
+      break;
+    default:
+      drawOwmView(data);
+      break;
+  }
+  drawChrome(data);
 }
 
 void LcdUi::render(const IndoorData& data) {
   if (!_ready) {
+    if (_logSkipCount < 3) {
+      Serial.println(F("[LCD] skip: !_ready"));
+      _logSkipCount++;
+    }
     return;
   }
 
+  const unsigned long now = millis();
+  const bool rotate = (now - _lastViewMs) >= LCD_VIEW_ROTATE_MS;
+  const uint8_t minute = NtpTime::isSynced() ? NtpTime::minutes() : 255;
   const bool changed =
-      _needsFullRedraw ||
+      _needsFullRedraw || rotate ||
       data.dataIsFresh() != _lastFresh ||
+      data.wifiConnected != _lastWifi ||
+      data.mqttConnected != _lastMqtt ||
       data.temperature != _lastTemp ||
       data.humidity != _lastHum ||
       data.pressure != _lastPress ||
+      minute != _lastMinute ||
       strncmp(data.extDesc, _lastDesc, INDOOR_EXT_DESC_MAX) != 0;
 
   if (!changed) {
     return;
   }
-  // Throttle SPI redraws even when values change rapidly
-  if (!_needsFullRedraw && (millis() - _lastUpdate) < LCD_INTERVAL_MS) {
+  if (!_needsFullRedraw && !rotate && (now - _lastUpdate) < LCD_INTERVAL_MS) {
     return;
   }
 
-  if (_needsFullRedraw) {
-    drawBackground();
+  claimBus();
+
+  if (rotate) {
+    _view = (uint8_t)((_view + 1) % LCD_VIEW_COUNT);
+    _lastViewMs = now;
+    logRenderDecision("wipe+view", data);
+    wipeHorizontal(accentForView(_view));
     _needsFullRedraw = false;
+  } else if (_needsFullRedraw) {
+    logRenderDecision("draw FULL", data);
+    _needsFullRedraw = false;
+  } else {
+    logRenderDecision("draw vals", data);
   }
 
-  drawValues(data);
+  drawView(data);
 
   _lastTemp = data.temperature;
   _lastHum = data.humidity;
   _lastPress = data.pressure;
   _lastFresh = data.dataIsFresh();
+  _lastWifi = data.wifiConnected;
+  _lastMqtt = data.mqttConnected;
+  _lastMinute = minute;
   strncpy(_lastDesc, data.extDesc, INDOOR_EXT_DESC_MAX - 1);
   _lastDesc[INDOOR_EXT_DESC_MAX - 1] = '\0';
   _lastUpdate = millis();
