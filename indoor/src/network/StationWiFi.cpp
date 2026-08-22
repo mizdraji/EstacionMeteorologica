@@ -53,6 +53,7 @@ void StationWiFi::begin() {
 void StationWiFi::update() {
   // Necesario con portal no bloqueante.
   _wm.process();
+  yield();
   _portalRunning = _wm.getConfigPortalActive();
 
   IndoorData& data = IndoorData::instance();
@@ -77,6 +78,7 @@ void StationWiFi::update() {
     _wm.startConfigPortal(HOSTNAME);
     _portalRunning = true;
     _lastAttempt = millis();
+    yield();
     return;
   }
 
@@ -84,5 +86,6 @@ void StationWiFi::update() {
     Serial.println(F("[WIFI] Reintentando credenciales guardadas..."));
     WiFi.begin();
     _lastAttempt = millis();
+    yield();
   }
 }

@@ -28,6 +28,8 @@ private:
   static char _lastDesc[INDOOR_EXT_DESC_MAX];
   static uint8_t _lastMinute;
   static uint8_t _logSkipCount;
+  static unsigned long _lastUptime;
+  static uint32_t _lastHeap;
 
   static void wipeHorizontal(uint16_t color);
   static void drawChrome(const IndoorData& data);
@@ -36,5 +38,6 @@ private:
   static void drawHumView(const IndoorData& data);
   static void drawPressView(const IndoorData& data);
   static void drawOwmView(const IndoorData& data);
+  static void drawSysView(const IndoorData& data);
   static void logRenderDecision(const char* why, const IndoorData& data);
 };

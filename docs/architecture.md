@@ -5,7 +5,7 @@
 | Nodo | Ubicación | Función |
 |------|-----------|---------|
 | **outdoor** | Exterior | Lee sensores (AHT10, BMP180), sirve UI web en LittleFS, publica telemetría MQTT |
-| **indoor** | Interior | Firmware **0.3.7**. Suscribe MQTT; MAX7219 (hora NTP UTC-3) y LCD ST7789 240×240 con 4 vistas rotativas (~7 s). ESP32 TTGO LoRa32 V1; OLED off; LoRa RST=14 LOW |
+| **indoor** | Interior | Firmware **0.3.9**. Suscribe MQTT; UI = LCD ST7789 240×240 (5 vistas ~7 s, incluida Sistema) + MAX7219 (hora NTP UTC-3). ESP32 TTGO LoRa32 V1 u otra placa: **siempre sin OLED**. LoRa RST=14 LOW |
 
 ## Flujo MQTT
 

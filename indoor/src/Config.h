@@ -4,7 +4,7 @@
 // Estación indoor (display) - ESP32 TTGO LoRa32 — Config
 // ============================================================
 
-#define FIRMWARE_VERSION "0.3.7"
+#define FIRMWARE_VERSION "0.3.9"
 
 // secrets.h opcional (OTA futuro). WiFi: WiFiManager (portal AP).
 // Ver secrets.h.example. secrets.h no se versiona.
@@ -21,16 +21,6 @@
 #define WIFI_CONFIG_PORTAL_TIMEOUT_SEC  180
 #define WIFI_CONNECT_TIMEOUT_SEC        20
 #define WIFI_INTERVAL_MS                5000
-
-// --- OLED (placa sin OLED; código opcional deshabilitado) ---
-// Pines históricos TTGO V1 (libres tras remoción): SDA=4, SCL=15, RST=16.
-#define OLED_ENABLED      0
-#define OLED_SDA_PIN      4
-#define OLED_SCL_PIN      15
-#define OLED_RST_PIN      16
-#define OLED_I2C_ADDRESS  0x3C
-#define OLED_WIDTH        128
-#define OLED_HEIGHT       64
 
 // --- LoRa SX127x en PCB (NO usar en este proyecto) ---
 // MAX7219 reutiliza SCK/CS del bus LoRa (probado en hardware). El radio se
@@ -52,17 +42,18 @@
 // --- LCD IPS 240×240 ST7789 / GMT130-V1.0 (HW SPI propio) ---
 // Módulo sin CS. VCC/BLK → 3V3.
 // Bus dedicado: SCK=23, MOSI=13 (no usa el bus LoRa/MAX).
-// DC/RST reutilizan pines liberados del OLED (4 / 16).
 #define LCD_CS_PIN          (-1)  // módulo sin CS
-#define LCD_DC_PIN          4     // OLED SDA liberado
-#define LCD_RST_PIN         16    // OLED RST liberado
+#define LCD_DC_PIN          4
+#define LCD_RST_PIN         16
 #define LCD_SCK_PIN         23    // VSPI-friendly; no LoRa SCK
 #define LCD_MOSI_PIN        13    // no LoRa MOSI
 #define LCD_MISO_PIN        (-1)  // no hace falta
 #define LCD_WIDTH           240
 #define LCD_HEIGHT          240
-#define LCD_VIEW_COUNT      4
+#define LCD_VIEW_COUNT      5
 #define LCD_VIEW_ROTATE_MS  7000  // rotación de vistas dashboard (~6–8 s)
+#define HEAP_WARN_BYTES     (48UL * 1024UL)  // LCD/Serial alerta si free heap < 48 KB
+#define SYS_SERIAL_INTERVAL_MS  20000
 
 // --- NTP (hora local Argentina UTC-3; reloj autónomo en MAX7219) ---
 #define NTP_SERVER              "3.south-america.pool.ntp.org"
@@ -82,7 +73,6 @@
 // --- Intervalos de tareas (ms) ---
 #define SYSTEM_INTERVAL_MS      1000
 #define CLOCK_INTERVAL_MS       1000
-#define OLED_INTERVAL_MS        1000
 #define LCD_INTERVAL_MS         2000
 
 #define WEATHER_VALUE_INVALID   (-9999.0f)

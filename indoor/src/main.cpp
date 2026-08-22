@@ -27,6 +27,7 @@ void setup() {
   Serial.println((int)esp_reset_reason());
   Serial.print(F("Free heap: "));
   Serial.println(ESP.getFreeHeap());
+  enableLoopWDT();
 }
 
 void loop() {
@@ -64,6 +65,7 @@ void setup() {
   Serial.print(F("Reset: "));
   Serial.println((int)esp_reset_reason());
 
+  enableLoopWDT();
   TaskManager::begin();
 }
 

@@ -5,7 +5,7 @@ Dos firmwares en un solo repositorio:
 | Carpeta | Rol |
 |---------|-----|
 | [`outdoor/`](outdoor/) | Nodo **exterior** (ESP8266): sensores (AHT10 + BMP180), web local, OTA, publica MQTT |
-| [`indoor/`](indoor/) | Nodo **interior** (ESP32 TTGO LoRa32 V1, fw **0.3.7**): suscribe MQTT; MAX7219 (hora NTP) + LCD 240×240 (4 vistas rotativas) |
+| [`indoor/`](indoor/) | Nodo **interior** (ESP32 TTGO LoRa32 V1, fw **0.3.9**): suscribe MQTT; UI = LCD ST7789 240×240 (5 vistas) + MAX7219 (hora NTP). Sin OLED. |
 
 ## Flujo de datos
 

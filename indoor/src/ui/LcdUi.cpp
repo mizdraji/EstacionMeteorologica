@@ -25,9 +25,10 @@ bool LcdUi::_lastMqtt = false;
 char LcdUi::_lastDesc[INDOOR_EXT_DESC_MAX] = {0};
 uint8_t LcdUi::_lastMinute = 255;
 uint8_t LcdUi::_logSkipCount = 0;
+unsigned long LcdUi::_lastUptime = 0;
+uint32_t LcdUi::_lastHeap = 0;
 
 static const uint16_t COL_BG = 0x10A2;
-static const uint16_t COL_PANEL = 0x2124;
 static const uint16_t COL_TEMP = 0xFD20;
 static const uint16_t COL_HUM = 0x07FF;
 static const uint16_t COL_PRESS = 0xAFE5;
@@ -45,8 +46,22 @@ static uint16_t accentForView(uint8_t view) {
       return COL_HUM;
     case 2:
       return COL_PRESS;
-    default:
+    case 3:
       return COL_OWM;
+    default:
+      return COL_TEXT;
+  }
+}
+
+static void formatUptime(unsigned long sec, char* buf, size_t n) {
+  const unsigned long d = sec / 86400UL;
+  const unsigned long h = (sec % 86400UL) / 3600UL;
+  const unsigned long m = (sec % 3600UL) / 60UL;
+  const unsigned long s = sec % 60UL;
+  if (d > 0) {
+    snprintf(buf, n, "%luD %02lu:%02lu:%02lu", d, h, m, s);
+  } else {
+    snprintf(buf, n, "%02lu:%02lu:%02lu", h, m, s);
   }
 }
 
@@ -343,6 +358,45 @@ void LcdUi::drawOwmView(const IndoorData& data) {
   }
 }
 
+void LcdUi::drawSysView(const IndoorData& data) {
+  const bool heapWarn = data.freeHeap < HEAP_WARN_BYTES;
+  tft.fillRect(0, 0, 8, LCD_HEIGHT, heapWarn ? COL_WARN : COL_TEXT);
+  tft.setTextWrap(false);
+  tft.setTextSize(1);
+  tft.setTextColor(COL_MUTED);
+  tft.setCursor(24, 36);
+  tft.print(F("SISTEMA"));
+
+  char buf[20];
+  formatUptime(data.uptime, buf, sizeof(buf));
+  tft.setTextSize(2);
+  tft.setTextColor(COL_TEXT);
+  tft.setCursor(24, 72);
+  tft.print(F("Uptime"));
+  tft.setCursor(24, 100);
+  tft.print(buf);
+
+  tft.setTextSize(1);
+  tft.setTextColor(COL_MUTED);
+  tft.setCursor(24, 140);
+  tft.print(F("Free heap"));
+  tft.setTextSize(2);
+  tft.setTextColor(heapWarn ? COL_WARN : COL_TEXT);
+  tft.setCursor(24, 162);
+  snprintf(buf, sizeof(buf), "%lu KB", (unsigned long)(data.freeHeap / 1024UL));
+  tft.print(buf);
+  tft.setTextSize(1);
+  tft.setTextColor(COL_MUTED);
+  tft.setCursor(24, 196);
+  tft.print(data.freeHeap);
+  tft.print(F(" B"));
+  if (heapWarn) {
+    tft.setTextColor(COL_WARN);
+    tft.setCursor(120, 196);
+    tft.print(F("LOW"));
+  }
+}
+
 void LcdUi::drawView(const IndoorData& data) {
   tft.fillScreen(COL_BG);
   tft.setTextWrap(false);
@@ -356,8 +410,11 @@ void LcdUi::drawView(const IndoorData& data) {
     case 2:
       drawPressView(data);
       break;
-    default:
+    case 3:
       drawOwmView(data);
+      break;
+    default:
+      drawSysView(data);
       break;
   }
   drawChrome(data);
@@ -384,6 +441,8 @@ void LcdUi::render(const IndoorData& data) {
       data.humidity != _lastHum ||
       data.pressure != _lastPress ||
       minute != _lastMinute ||
+      data.uptime != _lastUptime ||
+      data.freeHeap != _lastHeap ||
       strncmp(data.extDesc, _lastDesc, INDOOR_EXT_DESC_MAX) != 0;
 
   if (!changed) {
@@ -417,6 +476,8 @@ void LcdUi::render(const IndoorData& data) {
   _lastWifi = data.wifiConnected;
   _lastMqtt = data.mqttConnected;
   _lastMinute = minute;
+  _lastUptime = data.uptime;
+  _lastHeap = data.freeHeap;
   strncpy(_lastDesc, data.extDesc, INDOOR_EXT_DESC_MAX - 1);
   _lastDesc[INDOOR_EXT_DESC_MAX - 1] = '\0';
   _lastUpdate = millis();

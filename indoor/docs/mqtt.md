@@ -17,7 +17,7 @@ ClientId: `HOSTNAME` + chipId (ej. `weather-indoor-01-a1b2c3`).
 
 ## Campos usados del JSON
 
-| Campo | Uso en UI (LCD 0.3.7; OLED off) |
+| Campo | Uso en UI (LCD 0.3.9) |
 |-------|-----------|
 | `temp_main` (fallback `temp_aht` / `temp_bmp`) | Vista temperatura |
 | `humidity` | Vista humedad |

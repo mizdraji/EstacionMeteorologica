@@ -5,7 +5,6 @@
 #include "../network/MqttSubscriber.h"
 #include "../network/NtpTime.h"
 #include "../display/Max7219Display.h"
-#include "../display/OledDisplay.h"
 #include "../ui/LcdUi.h"
 #include <TaskScheduler.h>
 
@@ -22,7 +21,6 @@ static void taskWiFiCallback();
 static void taskNtpCallback();
 static void taskMqttCallback();
 static void taskClockCallback();
-static void taskOledCallback();
 static void taskLcdCallback();
 static void taskSystemCallback();
 
@@ -30,7 +28,6 @@ static Task taskWiFi(WIFI_INTERVAL_MS, TASK_FOREVER, &taskWiFiCallback);
 static Task taskNtp(NTP_TASK_INTERVAL_MS, TASK_FOREVER, &taskNtpCallback);
 static Task taskMqtt(MQTT_TASK_INTERVAL_MS, TASK_FOREVER, &taskMqttCallback);
 static Task taskClock(CLOCK_INTERVAL_MS, TASK_FOREVER, &taskClockCallback);
-static Task taskOled(OLED_INTERVAL_MS, TASK_FOREVER, &taskOledCallback);
 static Task taskLcd(LCD_INTERVAL_MS, TASK_FOREVER, &taskLcdCallback);
 static Task taskSystem(SYSTEM_INTERVAL_MS, TASK_FOREVER, &taskSystemCallback);
 
@@ -59,7 +56,6 @@ void TaskManager::begin() {
   scheduler.addTask(taskNtp);
   scheduler.addTask(taskMqtt);
   scheduler.addTask(taskClock);
-  scheduler.addTask(taskOled);
   scheduler.addTask(taskLcd);
   scheduler.addTask(taskSystem);
 
@@ -67,7 +63,6 @@ void TaskManager::begin() {
   taskNtp.enable();
   taskMqtt.enable();
   taskClock.enable();
-  taskOled.enable();
   taskLcd.enable();
   taskSystem.enable();
 
@@ -93,16 +88,6 @@ static void initDisplaysDeferred() {
 
   // LCD primero (HSPI 23/13): luego MAX bitbang en 21/18/5 — buses distintos.
   // NO llamar SPI.end(): destruía el bus del panel y dejaba splash/negro.
-#if OLED_ENABLED
-  Serial.println(F("[BOOT] OLED..."));
-  data.oledOK = OledDisplay::begin();
-  if (data.oledOK) {
-    OledDisplay::showBoot("Weather", FIRMWARE_VERSION);
-  }
-#else
-  data.oledOK = OledDisplay::begin();  // log + false
-#endif
-
   Serial.println(F("[BOOT] LCD HSPI (bus propio, no LoRa/VSPI)..."));
   data.lcdOK = LcdUi::begin();
   if (data.lcdOK) {
@@ -161,16 +146,6 @@ static void taskClockCallback() {
   }
 }
 
-static void taskOledCallback() {
-  if (!displaysReady) {
-    return;
-  }
-  if (!IndoorData::instance().oledOK) {
-    return;
-  }
-  OledDisplay::showStatus(IndoorData::instance());
-}
-
 static void taskLcdCallback() {
   if (!displaysReady) {
     return;
@@ -185,4 +160,41 @@ static void taskSystemCallback() {
   IndoorData& data = IndoorData::instance();
   data.uptime = (millis() - bootMillis) / 1000UL;
   data.freeHeap = ESP.getFreeHeap();
+
+  static unsigned long lastSysLog = 0;
+  const unsigned long now = millis();
+  if (now - lastSysLog >= SYS_SERIAL_INTERVAL_MS) {
+    lastSysLog = now;
+    const unsigned long d = data.uptime / 86400UL;
+    const unsigned long h = (data.uptime % 86400UL) / 3600UL;
+    const unsigned long m = (data.uptime % 3600UL) / 60UL;
+    const unsigned long s = data.uptime % 60UL;
+    Serial.print(F("[SYS] uptime="));
+    if (d > 0) {
+      Serial.print(d);
+      Serial.print('D');
+      Serial.print(' ');
+    }
+    if (h < 10) {
+      Serial.print('0');
+    }
+    Serial.print(h);
+    Serial.print(':');
+    if (m < 10) {
+      Serial.print('0');
+    }
+    Serial.print(m);
+    Serial.print(':');
+    if (s < 10) {
+      Serial.print('0');
+    }
+    Serial.print(s);
+    Serial.print(F(" heap="));
+    Serial.print(data.freeHeap);
+    if (data.freeHeap < HEAP_WARN_BYTES) {
+      Serial.print(F(" LOW"));
+    }
+    Serial.println();
+  }
+  yield();
 }

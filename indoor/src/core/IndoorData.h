@@ -31,7 +31,6 @@ struct IndoorData {
   uint32_t freeHeap = 0;
 
   bool max7219OK = false;
-  bool oledOK = false;
   bool lcdOK = false;
 
   bool dataIsFresh() const {

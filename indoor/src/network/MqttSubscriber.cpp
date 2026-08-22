@@ -188,10 +188,12 @@ void MqttSubscriber::update() {
   if (!mqttClient.connected()) {
     data.mqttConnected = false;
     if (!tryConnect()) {
+      yield();
       return;
     }
   }
 
   data.mqttConnected = true;
   mqttClient.loop();
+  yield();
 }
