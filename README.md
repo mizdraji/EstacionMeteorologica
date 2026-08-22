@@ -1,4 +1,4 @@
-# Estación Meteorológica (monorepo)
+# Estación Meteorológica
 
 Dos firmwares en un solo repositorio:
 
